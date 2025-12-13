@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rentapog Packages & Donation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6fa;
+            font-family: 'Montserrat', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 32px rgba(0, 31, 91, 0.10);
+            padding: 40px 32px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #0033a0;
+            margin-bottom: 32px;
+            font-size: 2.5em;
+        }
+
+        .packages {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        .package {
+            background: #f4f8fb;
+            border-radius: 12px;
+            border: 2px solid #0033a0;
+            padding: 32px 24px;
+            width: 320px;
+            box-sizing: border-box;
+            text-align: center;
+            transition: box-shadow 0.2s;
+        }
+
+        .package:hover {
+            box-shadow: 0 6px 24px rgba(0, 51, 160, 0.10);
+        }
+
+        .price {
+            font-size: 2.2em;
+            color: #e60000;
+            font-weight: bold;
+            margin: 16px 0 8px 0;
+        }
+
+        .desc {
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 18px;
+        }
+
+        .features {
+            text-align: left;
+            margin: 18px 0 0 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .features li {
+            margin-bottom: 10px;
+            padding-left: 1.2em;
+            position: relative;
+        }
+
+        .features li:before {
+            content: '✔';
+            color: #0033a0;
+            position: absolute;
+            left: 0;
+        }
+
+        .buy-btn {
+            background: #0033a0;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 28px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .donate-section {
+            background: #f4f8fb;
+            border-radius: 12px;
+            border: 2px solid #e60000;
+            padding: 32px 24px;
+            max-width: 500px;
+            margin: 0 auto 40px auto;
+            text-align: center;
+        }
+
+        .donate-btn {
+            background: #e60000;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 28px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                margin: 24px 8px;
+                padding: 24px 8px;
+            }
+
+            .packages {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .package {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Choose Your Digital Property Package</h1>
+        <!-- Stripe Payment Buttons removed from top -->
+        <div class="packages">
+            <div class="package">
+                <div class="price">$29</div>
+                <div class="desc"><b>Starter Digital Apartment</b><br>Perfect for new earners. Includes your first 3
+                    referrals guarantee.</div>
+                <ul class="features">
+                    <li>Get your own digital address</li>
+                    <li>First 3 referrals guaranteed in 24 hours</li>
+                    <li>Step-by-step training guides</li>
+                    <li>Access to the Rentapog back office</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/28E9ASdvocuZ4fu5CUgA801" target="_blank">Buy $29
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$49</div>
+                <div class="desc"><b>Premium Digital Apartment</b><br>Level up your earnings. Includes your first 3
+                    referrals guarantee.</div>
+                <ul class="features">
+                    <li>All Starter features</li>
+                    <li>Rent a bigger digital property</li>
+                    <li>Advanced earning strategies</li>
+                    <li>Priority support</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/3cIdR8770fHb8vK6GYgA802" target="_blank">Buy $49
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$99</div>
+                <div class="desc"><b>Big Digital Apartment</b><br>Maximize your potential. Includes your first 3
+                    referrals guarantee.</div>
+                <ul class="features">
+                    <li>All Premium features</li>
+                    <li>Rent the biggest digital property</li>
+                    <li>Exclusive earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/4gMfZg3UOgLf5jyaXegA803" target="_blank">Buy $99
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$149</div>
+                <div class="desc"><b>Pro Digital Apartment</b><br>For serious earners. <span
+                        style="color:#e60000;font-weight:bold;">You must know 3 people who want to join under you,
+                        because payments will come out of your account every day. Get your first 3 referrals to pay
+                        their way!</span></div>
+                <ul class="features">
+                    <li>All Big Digital Apartment features</li>
+                    <li>Pro earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/cNi3cu0IC1Ql7rG8P6gA804" target="_blank">Buy $149
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$199</div>
+                <div class="desc"><b>Elite Digital Apartment</b><br><span style="color:#e60000;font-weight:bold;">You
+                        must know 3 people who want to join under you, because payments will come out of your account
+                        every day. Get your first 3 referrals to pay their way!</span></div>
+                <ul class="features">
+                    <li>All Pro features</li>
+                    <li>Elite earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/00w9AS4YS8eJbHW6GYgA80a" target="_blank">Buy $199
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$249</div>
+                <div class="desc"><b>Platinum Digital Apartment</b><br><span style="color:#e60000;font-weight:bold;">You
+                        must know 3 people who want to join under you, because payments will come out of your account
+                        every day. Get your first 3 referrals to pay their way!</span></div>
+                <ul class="features">
+                    <li>All Elite features</li>
+                    <li>Platinum earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/fZu4gy770eD76nCc1igA807" target="_blank">Buy $249
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$299</div>
+                <div class="desc"><b>Diamond Digital Apartment</b><br><span style="color:#e60000;font-weight:bold;">You
+                        must know 3 people who want to join under you, because payments will come out of your account
+                        every day. Get your first 3 referrals to pay their way!</span></div>
+                <ul class="features">
+                    <li>All Platinum features</li>
+                    <li>Diamond earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/28E14m7707aF6nC2qIgA80d" target="_blank">Buy $299
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$349</div>
+                <div class="desc"><b>Executive Digital Apartment</b><br><span
+                        style="color:#e60000;font-weight:bold;">You must know 3 people who want to join under you,
+                        because payments will come out of your account every day. Get your first 3 referrals to pay
+                        their way!</span></div>
+                <ul class="features">
+                    <li>All Diamond features</li>
+                    <li>Executive earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/9B63cuezs66BdQ4d5mgA80e" target="_blank">Buy $349
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$399</div>
+                <div class="desc"><b>Presidential Digital Apartment</b><br><span
+                        style="color:#e60000;font-weight:bold;">You must know 3 people who want to join under you,
+                        because payments will come out of your account every day. Get your first 3 referrals to pay
+                        their way!</span></div>
+                <ul class="features">
+                    <li>All Executive features</li>
+                    <li>Presidential earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/4gM8wOezs0Mh5jy6GYgA80f" target="_blank">Buy $399
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$449</div>
+                <div class="desc"><b>Royal Digital Apartment</b><br><span style="color:#e60000;font-weight:bold;">You
+                        must know 3 people who want to join under you, because payments will come out of your account
+                        every day. Get your first 3 referrals to pay their way!</span></div>
+                <ul class="features">
+                    <li>All Presidential features</li>
+                    <li>Royal earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/bJe5kC9f8fHbcM04yQgA80g" target="_blank">Buy $449
+                    Package</a>
+            </div>
+            <div class="package">
+                <div class="price">$499</div>
+                <div class="desc"><b>Legendary Digital Apartment</b><br><span
+                        style="color:#e60000;font-weight:bold;">You must know 3 people who want to join under you,
+                        because payments will come out of your account every day. Get your first 3 referrals to pay
+                        their way!</span></div>
+                <ul class="features">
+                    <li>All Royal features</li>
+                    <li>Legendary earning tools</li>
+                    <li>VIP support and bonuses</li>
+                    <li>Daily earnings and fast payouts</li>
+                </ul>
+                <a class="buy-btn" href="https://buy.stripe.com/bJedR8ajc9iNeU85CUgA80h" target="_blank">Buy $499
+                    Package</a>
+            </div>
+        </div>
+        <!-- Set Your Own Price section removed -->
+        <div
+            style="margin-top:40px;text-align:center;color:#0033a0;font-size:1.15em;max-width:700px;margin-left:auto;margin-right:auto;">
+            <b>Why pay for a Rentapog package?</b><br>
+            <ul style="text-align:left;display:inline-block;margin:18px auto 0 auto;padding-left:1.2em;">
+                <li>We guarantee your first 3 referrals or your money back—no risk!</li>
+                <li>Unlock daily earnings and build your digital real estate empire</li>
+                <li>Get exclusive access to our back office, training, and support</li>
+                <li>Join a community of motivated earners and property owners</li>
+                <li>Every package and donation helps us create more opportunities for you and others</li>
+            </ul>
+        </div>
+        <div
+            style="margin:40px auto 0 auto;max-width:700px;color:#e60000;font-size:1.08em;text-align:center;background:#fff4f4;border:1.5px solid #e60000;border-radius:10px;padding:22px 18px 18px 18px;">
+            <b>Note:</b> The 3 referral guarantee system does <u>not</u> apply when you set your own rental price for
+            others to join under you. But you can still advertise your own rental price however you like!
+        </div>
+    </div>
+    </div>
+</body>
+
+</html>

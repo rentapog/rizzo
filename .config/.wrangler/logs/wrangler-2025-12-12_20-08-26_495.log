@@ -1,0 +1,208 @@
+
+--- 2025-12-12T20:08:26.718Z debug
+🪵  Writing logs to "/home/runner/workspace/.config/.wrangler/logs/wrangler-2025-12-12_20-08-26_495.log"
+---
+
+--- 2025-12-12T20:08:26.718Z debug
+Metrics dispatcher: Posting data {"deviceId":"c40fc470-29b9-4f42-b094-78fda8e8d726","event":"wrangler command started","timestamp":1765570106718,"properties":{"amplitude_session_id":1765570106715,"amplitude_event_id":0,"wranglerVersion":"4.53.0","osPlatform":"Linux","osVersion":"#1-NixOS SMP PREEMPT_DYNAMIC Tue Jan  1 00:00:00 UTC 1980","nodeVersion":20,"packageManager":"npm","isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"argsUsed":[],"argsCombination":"","command":"wrangler pages deploy","args":{}}}
+---
+
+--- 2025-12-12T20:08:26.738Z debug
+.env file not found at "/home/runner/workspace/.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2025-12-12T20:08:26.738Z debug
+.env file not found at "/home/runner/workspace/.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2025-12-12T20:08:26.786Z log
+
+ ⛅️ wrangler 4.53.0 (update available 4.54.0)
+─────────────────────────────────────────────
+---
+
+--- 2025-12-12T20:08:26.804Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/2a19e225618239285dd1b8682a8796fa/pages/projects/user-rentapoggy-com
+---
+
+--- 2025-12-12T20:08:26.804Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:26.805Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:26.805Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:26.805Z debug
+-- END CF API REQUEST
+---
+
+--- 2025-12-12T20:08:27.049Z debug
+-- START CF API RESPONSE: Forbidden 403
+---
+
+--- 2025-12-12T20:08:27.050Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.051Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.051Z debug
+-- END CF API RESPONSE
+---
+
+--- 2025-12-12T20:08:27.055Z log
+
+---
+
+--- 2025-12-12T20:08:27.149Z error
+✘ [ERROR] A request to the Cloudflare API (/accounts/2a19e225618239285dd1b8682a8796fa/pages/projects/user-rentapoggy-com) failed.
+
+  Authentication error [code: 10000]
+
+
+---
+
+--- 2025-12-12T20:08:27.149Z log
+📎 It looks like you are authenticating Wrangler via a custom API token set in an environment variable.
+Please ensure it has the correct permissions for this operation.
+
+---
+
+--- 2025-12-12T20:08:27.150Z log
+Getting User settings...
+---
+
+--- 2025-12-12T20:08:27.151Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/user/tokens/verify
+---
+
+--- 2025-12-12T20:08:27.151Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.151Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.151Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.151Z debug
+-- END CF API REQUEST
+---
+
+--- 2025-12-12T20:08:27.241Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2025-12-12T20:08:27.241Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.241Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.241Z debug
+-- END CF API RESPONSE
+---
+
+--- 2025-12-12T20:08:27.243Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/user
+---
+
+--- 2025-12-12T20:08:27.243Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.243Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.243Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.243Z debug
+-- END CF API REQUEST
+---
+
+--- 2025-12-12T20:08:27.426Z debug
+-- START CF API RESPONSE: Forbidden 403
+---
+
+--- 2025-12-12T20:08:27.426Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.426Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.426Z debug
+-- END CF API RESPONSE
+---
+
+--- 2025-12-12T20:08:27.427Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts
+---
+
+--- 2025-12-12T20:08:27.427Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.428Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.428Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.428Z debug
+-- END CF API REQUEST
+---
+
+--- 2025-12-12T20:08:27.601Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2025-12-12T20:08:27.601Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.601Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2025-12-12T20:08:27.601Z debug
+-- END CF API RESPONSE
+---
+
+--- 2025-12-12T20:08:27.602Z log
+👋 You are logged in with an User API Token. Unable to retrieve email for this user. Are you missing the `User->User Details->Read` permission?
+---
+
+--- 2025-12-12T20:08:27.602Z log
+ℹ️  The API Token is read from the CLOUDFLARE_API_TOKEN environment variable.
+---
+
+--- 2025-12-12T20:08:27.603Z log
+
+---
+
+--- 2025-12-12T20:08:27.603Z log
+🔓 To see token permissions visit https://dash.cloudflare.com/profile/api-tokens.
+---
+
+--- 2025-12-12T20:08:27.604Z debug
+Metrics dispatcher: Posting data {"deviceId":"c40fc470-29b9-4f42-b094-78fda8e8d726","event":"wrangler command errored","timestamp":1765570107604,"properties":{"amplitude_session_id":1765570106715,"amplitude_event_id":1,"wranglerVersion":"4.53.0","osPlatform":"Linux","osVersion":"#1-NixOS SMP PREEMPT_DYNAMIC Tue Jan  1 00:00:00 UTC 1980","nodeVersion":20,"packageManager":"npm","isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"argsUsed":[],"argsCombination":"","command":"wrangler pages deploy","args":{},"durationMs":913,"durationSeconds":0.913,"durationMinutes":0.015216666666666667,"errorType":"AuthenticationError"}}
+---
