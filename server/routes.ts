@@ -3781,7 +3781,14 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid package ID" });
       }
 
-      const stripe = new Stripe(process.env.STRIPE_API_KEY || "");
+      // Check if Stripe is configured
+      const stripeApiKey = process.env.STRIPE_API_KEY;
+      if (!stripeApiKey) {
+        console.error("[Package Checkout] STRIPE_API_KEY not configured");
+        return res.status(500).json({ error: "Payment system not configured. Please contact support." });
+      }
+
+      const stripe = new Stripe(stripeApiKey, { apiVersion: "2025-08-27.basil" });
       
       // Look up the affiliate user if we have an affiliate code
       let referrerId = null;
@@ -4108,14 +4115,21 @@ export async function registerRoutes(
       // Log the activity
       await logAiActivity("chat", `User asked: "${message.substring(0, 80)}${message.length > 80 ? '...' : ''}"`, userEmail);
 
-      // Use Replit AI Integrations for Anthropic
+      // Get API key - try standard CLAUDE_API_KEY first, fallback to Replit AI Integrations
+      const apiKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
+      const baseURL = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL; // Only use if on Replit
+      
+      if (!apiKey) {
+        throw new Error("Claude API key not configured. Please set CLAUDE_API_KEY environment variable.");
+      }
+
       const client = new Anthropic({
-        apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
+        apiKey,
+        ...(baseURL && { baseURL }), // Only add baseURL if it exists (Replit)
       });
 
       const response = await client.messages.create({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-20250514",
         max_tokens: 8192,
         system: `You are Coey, a helpful AI assistant for RentAPog users. You are LIMITED to helping with ONLY these 3 things:
 

@@ -2,8 +2,9 @@ import { useLocation, useParams } from "wouter";
 import { useState, useEffect } from "react";
 
 const getApiBaseUrl = () => {
+  // If on packages subdomain, use the main domain for API calls
   if (typeof window !== 'undefined' && window.location.hostname.includes('packages.rentapog.com')) {
-    return 'https://referral-cascade--rentapog.replit.app';
+    return 'https://rentapog.com';
   }
   return '';
 };
@@ -308,7 +309,9 @@ export default function PackageTier({ tierPrice }: PackageTierProps) {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert("Unable to create checkout session. Please try again.");
+        const errorMsg = data.error || "Unable to create checkout session. Please try again.";
+        console.error("Checkout failed:", errorMsg);
+        alert(errorMsg);
       }
     } catch (error) {
       console.error("Checkout error:", error);

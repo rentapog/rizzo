@@ -2,8 +2,9 @@ import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 
 const getApiBaseUrl = () => {
+  // If on packages subdomain, use the main domain for API calls
   if (typeof window !== 'undefined' && window.location.hostname.includes('packages.rentapog.com')) {
-    return 'https://referral-cascade--rentapog.replit.app';
+    return 'https://rentapog.com';
   }
   return '';
 };
