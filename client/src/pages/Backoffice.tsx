@@ -2134,6 +2134,35 @@ export default function Backoffice() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Deployed Sites Section */}
+                  {purchasedDomains.some((d: any) => d.hasRentAPogTemplate) && (
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-4">
+                      <h3 className="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
+                        <span className="text-lg">✅</span> Your Deployed RentAPog Sites
+                      </h3>
+                      <div className="space-y-2">
+                        {purchasedDomains
+                          .filter((d: any) => d.hasRentAPogTemplate)
+                          .map((domain: any) => (
+                            <div key={domain.id} className="flex items-center justify-between bg-white p-3 rounded border border-green-100">
+                              <span className="text-sm font-medium text-slate-700">{domain.domainName}</span>
+                              <a
+                                href={`https://${domain.domainName}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md font-medium transition-colors"
+                              >
+                                View Site
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="bg-white rounded-lg p-4 border border-blue-200">
                     <p className="text-sm text-slate-700 mb-3">
                       <strong>What you get:</strong> A fully branded RentAPog landing page with signup form, your affiliate code, and unique AI-generated content. Every page is different!
