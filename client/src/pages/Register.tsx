@@ -152,6 +152,15 @@ export default function Register() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
+            {/* Info banner about password */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700 flex items-start gap-2">
+              <Mail className="h-4 w-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Password-free registration!</p>
+                <p className="text-blue-600 mt-1">Your secure password will be automatically generated and sent to your email after registration.</p>
+              </div>
+            </div>
+            
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
