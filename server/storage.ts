@@ -60,6 +60,10 @@ export interface IStorage {
   resetPassword(userId: string, newPasswordHash: string): Promise<void>;
   getPassedUpSales(): Promise<any[]>;
   getAllAffiliateSales(): Promise<any[]>;
+  // First 3 leads system methods
+  getUnassignedEmailLeads(limit: number): Promise<any[]>;
+  assignLeadsToBuyer(leadIds: number[], buyerId: string): Promise<void>;
+  getLeadsAssignedToBuyer(buyerId: string): Promise<any[]>;
   getSalesWithSellerInfo(sellerId: string): Promise<any[]>;
   getUserLevelPassedUpSales(userId: string): Promise<any[]>;
   getAdminLevelPassedUpSales(): Promise<any[]>;
@@ -385,6 +389,41 @@ export const storage: IStorage = {
   async verifyEmailLead(leadId: number) {
     const result = await db.update(emailLeads).set({ verified: true }).where(eq(emailLeads.id, leadId)).returning();
     return result[0];
+  },
+
+  // First 3 leads system - Get unassigned email leads
+  async getUnassignedEmailLeads(limit: number) {
+    const result = await db.select()
+      .from(emailLeads)
+      .where(isNull(emailLeads.assignedToBuyer))
+      .orderBy(emailLeads.createdAt)
+      .limit(limit);
+    return result;
+  },
+
+  // Assign leads to a buyer who just purchased
+  async assignLeadsToBuyer(leadIds: number[], buyerId: string) {
+    if (leadIds.length === 0) return;
+    
+    await db.update(emailLeads)
+      .set({ 
+        assignedToBuyer: buyerId,
+        assignedAt: new Date()
+      })
+      .where(
+        leadIds.length === 1 
+          ? eq(emailLeads.id, leadIds[0])
+          : sql`${emailLeads.id} IN (${sql.join(leadIds.map(id => sql`${id}`), sql`, `)})`
+      );
+  },
+
+  // Get leads assigned to a specific buyer
+  async getLeadsAssignedToBuyer(buyerId: string) {
+    const result = await db.select()
+      .from(emailLeads)
+      .where(eq(emailLeads.assignedToBuyer, buyerId))
+      .orderBy(emailLeads.assignedAt);
+    return result;
   },
 
   async setPasswordResetToken(email: string, token: string, expires: Date) {

@@ -76,6 +76,8 @@ export const emailLeads = pgTable("email_leads", {
   assignedAffiliate: text("assigned_affiliate"), // Their affiliate link after signup
   verificationToken: text("verification_token"), // Token for email verification
   verified: boolean("verified").notNull().default(false), // Whether email has been verified
+  assignedToBuyer: varchar("assigned_to_buyer"), // User ID of buyer who got this lead (first 3 leads system)
+  assignedAt: timestamp("assigned_at"), // When this lead was assigned to a buyer
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

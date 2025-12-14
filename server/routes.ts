@@ -772,6 +772,61 @@ export async function registerRoutes(
         console.log(`[Auto-Login] Started 7-day trial for ${customerEmail} after paying $${(packageAmount / 100).toFixed(2)} join fee`);
       }
 
+      // FIRST 3 LEADS SYSTEM: Assign next 3 unassigned email leads to this buyer
+      try {
+        const unassignedLeads = await storage.getUnassignedEmailLeads(3);
+        if (unassignedLeads.length > 0) {
+          const leadIds = unassignedLeads.map(lead => lead.id);
+          await storage.assignLeadsToBuyer(leadIds, user.id);
+          
+          console.log(`[Auto-Login] ✓ Assigned ${unassignedLeads.length} leads to ${customerEmail}:`);
+          unassignedLeads.forEach(lead => {
+            console.log(`  - ${lead.email} (created ${lead.createdAt})`);
+          });
+
+          // Send notification email to buyer about their new leads
+          const leadsList = unassignedLeads.map(lead => `• ${lead.email}`).join('\n');
+          await sendEmail({
+            to: user.email,
+            subject: `🎉 You Got ${unassignedLeads.length} New Leads!`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #10b981;">🎉 Congratulations!</h2>
+                <p style="font-size: 16px;">You just received <strong>${unassignedLeads.length} fresh email leads</strong> as part of your package purchase!</p>
+                
+                <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+                  <h3 style="color: #1e40af; margin-top: 0;">Your New Leads:</h3>
+                  <div style="font-family: monospace; color: #1e293b;">
+                    ${unassignedLeads.map(lead => `<div style="padding: 4px 0;">✓ ${lead.email}</div>`).join('')}
+                  </div>
+                </div>
+
+                <p style="font-size: 16px;">These leads are now in your funnel! When any of them purchase a package, <strong>you'll earn the commission</strong> (following the pass-up rules).</p>
+                
+                <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 0; color: #92400e;"><strong>How It Works:</strong></p>
+                  <ul style="color: #78350f; margin: 10px 0;">
+                    <li>These leads received your affiliate link in their emails</li>
+                    <li>If they purchase, you get the commission (except 2nd sale per tier)</li>
+                    <li>More purchases = more leads assigned to you!</li>
+                  </ul>
+                </div>
+
+                <p style="text-align: center; margin-top: 30px;">
+                  <a href="https://backend.rentapog.com" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">View Your Dashboard</a>
+                </p>
+              </div>
+            `,
+            text: `🎉 Congratulations!\n\nYou just received ${unassignedLeads.length} fresh email leads!\n\nYour New Leads:\n${leadsList}\n\nThese leads are now in your funnel! When they purchase, you'll earn the commission.\n\nLogin: https://backend.rentapog.com`
+          });
+        } else {
+          console.log(`[Auto-Login] No unassigned leads available for ${customerEmail}`);
+        }
+      } catch (leadErr) {
+        console.error(`[Auto-Login] Failed to assign leads:`, leadErr);
+        // Don't fail the whole process if lead assignment fails
+      }
+
       // Record affiliate sale for the referrer
       if (user.affiliateLink && packageAmount > 0) {
         try {

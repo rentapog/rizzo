@@ -504,6 +504,73 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* NEW: First 3 Leads System Explanation */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200 max-w-3xl mx-auto mt-6">
+              <div className="text-center mb-6">
+                <div className="inline-block px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-bold mb-3">
+                  🎁 BONUS: Get Free Leads!
+                </div>
+                <h4 className="font-bold text-slate-900 text-2xl mb-2">Instant Lead Pool System</h4>
+                <p className="text-slate-600">When you purchase a package, you automatically get leads!</p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 mb-4 border border-blue-100">
+                <h5 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <span className="text-2xl">🔄</span> How The Rotation Works:
+                </h5>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm">1</div>
+                    <div>
+                      <p className="font-semibold text-slate-900">First Buyer Gets Leads 1-3</p>
+                      <p className="text-sm text-slate-600">The first person to purchase gets the first 3 email signups</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">2</div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Second Buyer Gets Leads 4-6</p>
+                      <p className="text-sm text-slate-600">Next buyer gets the next 3 signups in the queue</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm">∞</div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Automatic Rotation Continues</p>
+                      <p className="text-sm text-slate-600">Each buyer gets the next 3 leads - fair and automatic!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-4 border border-blue-100">
+                  <p className="font-bold text-blue-600 mb-2">💰 What This Means For You:</p>
+                  <ul className="text-sm text-slate-600 space-y-1">
+                    <li>✓ Get 3 fresh leads instantly when you buy</li>
+                    <li>✓ These leads already have your affiliate link</li>
+                    <li>✓ When they purchase, YOU earn the commission</li>
+                    <li>✓ Buy more packages = get more leads!</li>
+                  </ul>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-blue-100">
+                  <p className="font-bold text-green-600 mb-2">📈 Example Scenario:</p>
+                  <ul className="text-sm text-slate-600 space-y-1">
+                    <li>• You purchase → Get Sarah, Mike, Lisa</li>
+                    <li>• Sarah buys $99 package → You earn $99!</li>
+                    <li>• Mike buys $49 package → You earn $49!</li>
+                    <li>• Lisa signs up friends → More earnings!</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-4 bg-amber-50 rounded-lg p-4 border border-amber-200">
+                <p className="text-sm text-slate-700 text-center">
+                  <span className="font-bold text-amber-700">🚀 Pro Tip:</span> The more people who sign up on the platform, the more valuable each package purchase becomes - you're not just buying access, you're buying future leads!
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Why Choose Us */}
