@@ -30,6 +30,58 @@ function getSiteBranding() {
   };
 }
 
+// Helper function to send emails using either SendGrid or Resend
+async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
+  const branding = getSiteBranding();
+  
+  // Check if SendGrid is configured (for airizzos.com)
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      const sgMail = await import("@sendgrid/mail");
+      sgMail.default.setApiKey(process.env.SENDGRID_API_KEY);
+      
+      await sgMail.default.send({
+        to,
+        from: branding.fromEmail,
+        subject,
+        html,
+        text,
+      });
+      
+      console.log(`[Email] Sent via SendGrid to ${to}`);
+      return { success: true };
+    } catch (error) {
+      console.error("[Email] SendGrid error:", error);
+      return { success: false, error };
+    }
+  }
+  
+  // Otherwise use Resend (for rentapog.com)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const { Resend } = await import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      await resend.emails.send({
+        from: branding.fromEmail,
+        to,
+        subject,
+        html,
+        text,
+      });
+      
+      console.log(`[Email] Sent via Resend to ${to}`);
+      return { success: true };
+    } catch (error) {
+      console.error("[Email] Resend error:", error);
+      return { success: false, error };
+    }
+  }
+  
+  console.error("[Email] No email service configured (SENDGRID_API_KEY or RESEND_API_KEY)");
+  return { success: false, error: "No email service configured" };
+}
+
 // Helper function to process daily charges using referral balance first
 async function processChargeWithReferralBalance(userId: string, chargeAmount: number) {
   const user = await storage.getUserById(userId);
@@ -401,57 +453,54 @@ export async function registerRoutes(
       
       // Send email with their password and personal affiliate link
       try {
-        const { Resend } = await import("resend");
-        const resendApiKey = process.env.RESEND_API_KEY;
-        if (resendApiKey) {
-          const resend = new Resend(resendApiKey);
-          const personalAffiliateLink = `https://rentapog.com/?aff=${user.referralCode}`;
-          
-          await resend.emails.send({
-            from: "RentAPog <sales@rentapog.com>",
-            to: user.email,
-            subject: "Welcome to RentAPog - Your Login Details",
-            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #1e40af;">Welcome! Your Account is Ready</h2>
-              <p style="font-size: 16px; color: #333;">Your account has been created successfully!</p>
-              
-              <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-                <p style="margin: 0 0 10px 0; color: #92400e; font-weight: bold;">🔐 Your Login Details:</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> ${user.email}</p>
-                <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #fff; padding: 5px 10px; border-radius: 4px; font-size: 16px; color: #dc2626;">${generatedPassword}</code></p>
-                <p style="margin: 15px 0 5px 0; font-size: 14px; color: #92400e;">⚠️ Save this password securely! You can change it after logging in.</p>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="https://backend.rentapog.com" style="display: inline-block; background: #2563eb; color: white; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">Login to Your Backoffice</a>
-              </div>
-              
-              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Your Personal Affiliate Link:</p>
-                <p style="font-size: 18px; color: #0066cc; font-weight: bold; margin: 0 0 15px 0;">rentapog.com/?aff=${user.referralCode}</p>
-                <a href="${personalAffiliateLink}" style="display: inline-block; background: #10b981; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 14px; font-weight: bold;">Start Promoting & Earning</a>
-              </div>
-              
-              <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
-                <strong>How You Earn:</strong>
-                <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-                  <li>100% commission on the 1st sale</li>
-                  <li>Admin gets the 2nd sale (covers costs)</li>
-                  <li>100% commission on the 3rd and ALL future sales!</li>
-                </ul>
-              </div>
-              
-              <p style="color: #666;"><strong>Your username:</strong> ${user.referralCode}</p>
-              <p style="color: #666;">Share your link everywhere: TikTok, Instagram, Facebook, email... anywhere!</p>
-              
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-                <p>RentAPog - Daily Domain Rental Platform</p>
-              </div>
-            </div>`,
-            text: `Welcome! Your Account is Ready\n\nYour Login Details:\nEmail: ${user.email}\nPassword: ${generatedPassword}\n\n⚠️ Save this password securely! You can change it after logging in.\n\nLogin at: https://backend.rentapog.com\n\nYour Personal Affiliate Link:\nrentapog.com/?aff=${user.referralCode}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nYour username: ${user.referralCode}\n\nShare your link everywhere!`,
-          });
-          console.log(`[Register] Confirmation email sent to ${user.email} with password and link: rentapog.com/?aff=${user.referralCode}`);
-        }
+        const branding = getSiteBranding();
+        const personalAffiliateLink = `https://${branding.domain}/?aff=${user.referralCode}`;
+        const backendUrl = `https://backend.${branding.domain}`;
+        
+        await sendEmail({
+          to: user.email,
+          subject: `Welcome to ${branding.name} - Your Login Details`,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #1e40af;">Welcome! Your Account is Ready</h2>
+            <p style="font-size: 16px; color: #333;">Your account has been created successfully!</p>
+            
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+              <p style="margin: 0 0 10px 0; color: #92400e; font-weight: bold;">🔐 Your Login Details:</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${user.email}</p>
+              <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #fff; padding: 5px 10px; border-radius: 4px; font-size: 16px; color: #dc2626;">${generatedPassword}</code></p>
+              <p style="margin: 15px 0 5px 0; font-size: 14px; color: #92400e;">⚠️ Save this password securely! You can change it after logging in.</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${backendUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">Login to Your Backoffice</a>
+            </div>
+            
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Your Personal Affiliate Link:</p>
+              <p style="font-size: 18px; color: #0066cc; font-weight: bold; margin: 0 0 15px 0;">${branding.domain}/?aff=${user.referralCode}</p>
+              <a href="${personalAffiliateLink}" style="display: inline-block; background: #10b981; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 14px; font-weight: bold;">Start Promoting & Earning</a>
+            </div>
+            
+            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
+              <strong>How You Earn:</strong>
+              <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                <li>100% commission on the 1st sale</li>
+                <li>Admin gets the 2nd sale (covers costs)</li>
+                <li>100% commission on the 3rd and ALL future sales!</li>
+              </ul>
+            </div>
+            
+            <p style="color: #666;"><strong>Your username:</strong> ${user.referralCode}</p>
+            <p style="color: #666;">Share your link everywhere: TikTok, Instagram, Facebook, email... anywhere!</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
+              <p>${branding.name} - Daily Domain Rental Platform</p>
+            </div>
+          </div>`,
+          text: `Welcome! Your Account is Ready\n\nYour Login Details:\nEmail: ${user.email}\nPassword: ${generatedPassword}\n\n⚠️ Save this password securely! You can change it after logging in.\n\nLogin at: ${backendUrl}\n\nYour Personal Affiliate Link:\n${branding.domain}/?aff=${user.referralCode}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nYour username: ${user.referralCode}\n\nShare your link everywhere!`,
+        });
+        
+        console.log(`[Register] Confirmation email sent to ${user.email} with password and link: ${branding.domain}/?aff=${user.referralCode}`);
       } catch (emailErr) {
         console.error("[Register] Failed to send confirmation email:", emailErr);
       }
