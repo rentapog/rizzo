@@ -16,6 +16,20 @@ import { createSubdomain, setupDomainForwarding, isSubdomainAvailable, fixSubdom
 import nodemailer from "nodemailer";
 import { notificationService } from "./websocket";
 
+// Helper function to get site-specific branding based on domain
+function getSiteBranding() {
+  const siteName = process.env.SITE_NAME || "RentAPog";
+  const siteEmail = process.env.SITE_EMAIL || "sales@rentapog.com";
+  const siteDomain = process.env.SITE_DOMAIN || "rentapog.com";
+  
+  return {
+    name: siteName,
+    email: siteEmail,
+    domain: siteDomain,
+    fromEmail: `${siteName} <${siteEmail}>`,
+  };
+}
+
 // Helper function to process daily charges using referral balance first
 async function processChargeWithReferralBalance(userId: string, chargeAmount: number) {
   const user = await storage.getUserById(userId);
