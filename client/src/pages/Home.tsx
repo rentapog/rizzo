@@ -511,8 +511,8 @@ export default function Home() {
                 <div className="inline-block px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-bold mb-3">
                   🎁 BONUS: Get Free Leads!
                 </div>
-                <h4 className="font-bold text-slate-900 text-2xl mb-2">Instant Lead Pool System</h4>
-                <p className="text-slate-600">When you purchase a package, you automatically get leads!</p>
+                <h4 className="font-bold text-slate-900 text-2xl mb-2">Rotating Lead Pool System</h4>
+                <p className="text-slate-600">When you purchase a package, you get your share of incoming leads as the system collects them!</p>
               </div>
 
               <div className="bg-white rounded-xl p-6 mb-4 border border-blue-100">
@@ -548,10 +548,10 @@ export default function Home() {
                 <div className="bg-white rounded-lg p-4 border border-blue-100">
                   <p className="font-bold text-blue-600 mb-2">💰 What This Means For You:</p>
                   <ul className="text-sm text-slate-600 space-y-1">
-                    <li>✓ Get 3 fresh leads instantly when you buy</li>
+                    <li>✓ Your next 3 leads assigned as system collects them</li>
                     <li>✓ These leads already have your affiliate link</li>
                     <li>✓ When they purchase, YOU earn the commission</li>
-                    <li>✓ Buy more packages = get more leads!</li>
+                    <li>✓ Buy more packages = get more leads in rotation!</li>
                   </ul>
                 </div>
                 <div className="bg-white rounded-lg p-4 border border-blue-100">
