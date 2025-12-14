@@ -2,8 +2,8 @@ import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 
 const getApiBaseUrl = () => {
-  // Always use Render backend for API calls
-  return 'https://rizz-4zvv.onrender.com';
+  // Use Replit backend for API calls
+  return 'https://referral-cascade--rentapog.replit.app';
 };
 
 interface Package {
