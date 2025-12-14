@@ -59,6 +59,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {link.label}
               </Link>
             ))}
+            <Link href="/login">
+              <Button variant="outline" size="sm" className="ml-2">
+                Login
+              </Button>
+            </Link>
           </nav>
 
           {/* Mobile Nav Toggle */}
@@ -83,6 +88,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                  {link.label}
                </Link>
              ))}
+             <Link href="/login" className="block" onClick={() => setIsMobileMenuOpen(false)}>
+               <Button variant="outline" size="sm" className="w-full">
+                 Login
+               </Button>
+             </Link>
           </div>
         )}
       </header>
