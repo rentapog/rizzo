@@ -200,6 +200,15 @@ export async function sendTestEmail(toEmail: string) {
 export async function startEmailWorker() {
   console.log("[Email Worker] ✓ Starting email scheduler...");
   console.log(`[Email Worker] Resend API Key: ${process.env.RESEND_API_KEY ? "SET" : "NOT SET"}`);
+  
+  if (process.env.RESEND_API_KEY) {
+    console.log(`[Email Worker] API Key Preview: ${process.env.RESEND_API_KEY.substring(0, 10)}...`);
+  } else {
+    console.error("[Email Worker] ✗✗✗ CRITICAL: RESEND_API_KEY is NOT configured!");
+    console.error("[Email Worker] Email autoresponder will NOT work!");
+    console.error("[Email Worker] Set RESEND_API_KEY in your Render environment variables:");
+    console.error("[Email Worker] https://dashboard.render.com → Your Service → Environment");
+  }
 
   if (!initializeResend()) {
     console.error("[Email Worker] ✗ Cannot start - Resend not configured");

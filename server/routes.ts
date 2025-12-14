@@ -30,33 +30,64 @@ function getSiteBranding() {
   };
 }
 
+// Helper function to get domain-specific Stripe keys
+function getStripeConfig(hostname?: string) {
+  // If hostname is airizzos.com or packages.airizzos.com, use test keys
+  if (hostname && (hostname.includes('airizzos.com'))) {
+    const testKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_API_KEY;
+    const testWebhook = process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
+    console.log(`[Stripe Config] Using TEST keys for ${hostname}`);
+    return {
+      secretKey: testKey,
+      webhookSecret: testWebhook,
+      isTest: true
+    };
+  }
+  
+  // Default to production keys
+  return {
+    secretKey: process.env.STRIPE_API_KEY,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    isTest: false
+  };
+}
+
 // Helper function to send emails using either SendGrid or Resend
 async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
   const branding = getSiteBranding();
   
-  // Check if SendGrid is configured (for airizzos.com)
+  // Try SendGrid first if configured (for airizzos.com)
   if (process.env.SENDGRID_API_KEY) {
     try {
-      const sgMail = await import("@sendgrid/mail");
-      sgMail.default.setApiKey(process.env.SENDGRID_API_KEY);
+      const apiKey = process.env.SENDGRID_API_KEY.trim();
       
-      await sgMail.default.send({
-        to,
-        from: branding.fromEmail,
-        subject,
-        html,
-        text,
-      });
-      
-      console.log(`[Email] Sent via SendGrid to ${to}`);
-      return { success: true };
-    } catch (error) {
-      console.error("[Email] SendGrid error:", error);
-      return { success: false, error };
+      // Validate SendGrid API key format
+      if (!apiKey.startsWith('SG.')) {
+        console.error(`[Email] ✗ SendGrid API key invalid (must start with 'SG.') - falling back to Resend`);
+        // Don't return - fall through to Resend
+      } else {
+        const sgMail = await import("@sendgrid/mail");
+        sgMail.default.setApiKey(apiKey);
+        
+        await sgMail.default.send({
+          to,
+          from: branding.fromEmail,
+          subject,
+          html,
+          text,
+        });
+        
+        console.log(`[Email] ✓ Sent via SendGrid to ${to}`);
+        return { success: true, provider: 'sendgrid' };
+      }
+    } catch (error: any) {
+      console.error(`[Email] ✗ SendGrid failed: ${error?.message || error}`);
+      console.error(`[Email] Attempting fallback to Resend...`);
+      // Don't return - fall through to Resend
     }
   }
   
-  // Otherwise use Resend (for rentapog.com)
+  // Use Resend (for rentapog.com or as fallback)
   if (process.env.RESEND_API_KEY) {
     try {
       const { Resend } = await import("resend");
@@ -70,15 +101,16 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
         text,
       });
       
-      console.log(`[Email] Sent via Resend to ${to}`);
-      return { success: true };
-    } catch (error) {
-      console.error("[Email] Resend error:", error);
-      return { success: false, error };
+      console.log(`[Email] ✓ Sent via Resend to ${to}`);
+      return { success: true, provider: 'resend' };
+    } catch (error: any) {
+      console.error(`[Email] ✗ Resend error: ${error?.message || error}`);
+      return { success: false, error, provider: 'resend' };
     }
   }
   
-  console.error("[Email] No email service configured (SENDGRID_API_KEY or RESEND_API_KEY)");
+  console.error("[Email] ✗✗✗ No email service configured!");
+  console.error("[Email] Set either SENDGRID_API_KEY or RESEND_API_KEY in environment");
   return { success: false, error: "No email service configured" };
 }
 
@@ -387,9 +419,14 @@ export async function registerRoutes(
           </div>`,
           text: `Welcome to ${siteBranding.name}!\n\nYour Login Credentials:\nEmail: ${email}\nUsername: ${username}\nPassword: ${password}\n\nYour affiliate link is ready:\nrentapog.com/?aff=${username}\n\nNext Step - Get Your Package:\n${packagesLink}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nLogin: https://backend.rentapog.com`,
         });
-        console.log(`[Home Signup] Welcome email with credentials sent to ${email}`);
-      } catch (emailErr) {
-        console.error("[Home Signup] Failed to send welcome email:", emailErr);
+        
+        if (emailResult.success) {
+          console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via ${emailResult.provider}`);
+        } else {
+          console.error(`[Home Signup] ✗✗✗ FAILED to send welcome email to ${email}`);
+        }
+      } catch (emailErr: any) {
+        console.error(`[Home Signup] ✗✗✗ Email exception: ${emailErr?.message || emailErr}`);
       }
 
       res.json({ 
@@ -507,9 +544,13 @@ export async function registerRoutes(
           text: `Welcome! Your Account is Ready\n\nYour Login Details:\nEmail: ${user.email}\nPassword: ${generatedPassword}\n\n⚠️ Save this password securely! You can change it after logging in.\n\nLogin at: ${backendUrl}\n\nYour Personal Affiliate Link:\n${branding.domain}/?aff=${user.referralCode}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nYour username: ${user.referralCode}\n\nShare your link everywhere!`,
         });
         
-        console.log(`[Register] Confirmation email sent to ${user.email} with password and link: ${branding.domain}/?aff=${user.referralCode}`);
-      } catch (emailErr) {
-        console.error("[Register] Failed to send confirmation email:", emailErr);
+        if (emailResult.success) {
+          console.log(`[Register] ✓✓✓ Confirmation email sent to ${user.email} via ${emailResult.provider}`);
+        } else {
+          console.error(`[Register] ✗✗✗ FAILED to send confirmation email to ${user.email}`);
+        }
+      } catch (emailErr: any) {
+        console.error(`[Register] ✗✗✗ Email exception: ${emailErr?.message || emailErr}`);
       }
       
       // Note: createUser() automatically schedules all 7 emails, no need to duplicate here
@@ -2966,7 +3007,17 @@ export async function registerRoutes(
       try {
         const { Resend } = await import("resend");
         const resendApiKey = process.env.RESEND_API_KEY;
+        
+        console.log(`[Subscribe] ✓ Email capture: ${email}`);
+        console.log(`[Subscribe] Resend API Key configured: ${resendApiKey ? 'YES' : 'NO'}`);
+        
+        if (!resendApiKey) {
+          console.error('[Subscribe] ✗ CRITICAL: RESEND_API_KEY not set! Emails will NOT be sent.');
+          console.error('[Subscribe] Set RESEND_API_KEY in your Render environment variables.');
+        }
+        
         if (resendApiKey) {
+          console.log(`[Subscribe] Initializing Resend with key: ${resendApiKey.substring(0, 10)}...`);
           const resend = new Resend(resendApiKey);
           const personalLink = `https://rentapog.com/?aff=${personalAffiliateCode}`;
           const unsubscribeUrl = `https://rentapog.com/api/unsubscribe?email=${encodeURIComponent(email)}`;
@@ -2991,9 +3042,11 @@ export async function registerRoutes(
             </div>`,
             text: `You're In!\n\nThanks for subscribing to RentAPog - the daily domain rental platform where you can earn 100% commissions.\n\nCheck your inbox in a moment - your unique affiliate link is on its way!\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: ${unsubscribeUrl}`,
           });
-          console.log(`[Subscribe] Email 1 (Welcome) sent to ${email}`);
+          console.log(`[Subscribe] ✓✓✓ Email 1 (Welcome) SUCCESSFULLY sent to ${email}`);
+          console.log(`[Subscribe] Check inbox: ${email}`);
           
           // EMAIL 2: Create Account to get username-based affiliate link
+          console.log(`[Subscribe] Sending Email 2 (Create Account) to ${email}...`);
           await resend.emails.send({
             from: "RentAPog <sales@rentapog.com>",
             to: email,
@@ -3026,7 +3079,7 @@ export async function registerRoutes(
             </div>`,
             text: `Get Your Personal Affiliate Link!\n\nCreate your account to get your custom affiliate link:\n\nYour link will be: rentapog.com/?aff=YourUsername\n\nCreate Account: https://backend.rentapog.com/register\n\nHow You Earn:\n- 100% commission on the 1st referral sale\n- Admin gets the 2nd referral (to cover costs)\n- 100% commission on the 3rd and ALL future sales\n\nChoose your username wisely - it becomes your affiliate link!\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: ${unsubscribeUrl}`,
           });
-          console.log(`[Subscribe] Email 2 (Create Account) sent to ${email}`);
+          console.log(`[Subscribe] ✓✓✓ Email 2 (Create Account) SUCCESSFULLY sent to ${email}`);
           
           // EMAIL 3: Notify the REFERRER that they got a new lead
           if (referrerAffiliate && referrerAffiliate !== "rentapog") {
@@ -3073,8 +3126,14 @@ export async function registerRoutes(
             }
           }
         }
-      } catch (emailErr) {
-        console.error("[Subscribe] Failed to send welcome emails:", emailErr);
+      } catch (emailErr: any) {
+        console.error("[Subscribe] ✗✗✗ FAILED to send welcome emails!");
+        console.error("[Subscribe] Error details:", emailErr?.message || emailErr);
+        console.error("[Subscribe] Full error:", JSON.stringify(emailErr, null, 2));
+        console.error("[Subscribe] Please verify:");
+        console.error("[Subscribe] 1. RESEND_API_KEY is set correctly in Render");
+        console.error("[Subscribe] 2. Email is verified in Resend dashboard: https://resend.com/domains");
+        console.error("[Subscribe] 3. From email 'sales@rentapog.com' is authorized");
       }
 
       // Sync to Mailchimp
