@@ -21,7 +21,6 @@ export default function Register() {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -110,7 +109,6 @@ export default function Register() {
           name, 
           username,
           email, 
-          password, 
           address,
           city,
           state,
@@ -126,34 +124,18 @@ export default function Register() {
         return;
       }
 
-      // Auto-login after registration
-      const loginRes = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      // Registration successful - password sent to email
+      const data = await res.json();
+      
+      toast({
+        title: "✓ Account created! Check your email for login password.",
+        description: "Your password has been sent to " + email,
       });
-
-      if (loginRes.ok) {
-        const loginData = await loginRes.json();
-        localStorage.setItem("user", JSON.stringify(loginData.user));
-        localStorage.setItem("affiliateLink", affiliateLink);
-
-        toast({
-          title: "✓ Account created! Redirecting to domain registration...",
-        });
-        
-        // Redirect to domain registration page
-        setTimeout(() => {
-          window.location.href = `https://domain.rentapog.com/`;
-        }, 1000);
-      } else {
-        toast({
-          title: "✓ Account created! Please log in to continue.",
-        });
-        setTimeout(() => {
-          window.location.href = `https://domain.rentapog.com/`;
-        }, 1500);
-      }
+      
+      // Redirect to login page after showing message
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
     } catch (err) {
       setError("An error occurred. Please try again.");
     } finally {
@@ -226,21 +208,7 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  className="pl-9"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  data-testid="input-password"
-                />
-              </div>
-            </div>
+
 
             <div className="border-t pt-4">
               <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
