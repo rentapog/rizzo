@@ -2,11 +2,8 @@ import { useLocation, useParams } from "wouter";
 import { useState, useEffect } from "react";
 
 const getApiBaseUrl = () => {
-  // If on packages subdomain, use the main domain for API calls
-  if (typeof window !== 'undefined' && window.location.hostname.includes('packages.rentapog.com')) {
-    return 'https://rentapog.com';
-  }
-  return '';
+  // Always use Render backend for API calls
+  return 'https://rizz-4zvv.onrender.com';
 };
 
 interface Package {
