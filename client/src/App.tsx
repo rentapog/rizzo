@@ -144,12 +144,14 @@ function Router() {
     );
   }
 
-  // Check for custom domain branding (not rentapog.com, not airizzos.com, not localhost, not replit.dev)
+  // Check for custom domain branding (not rentapog.com, not airizzos.com, not localhost, not replit.dev, not render.com)
   const mainDomains = ["rentapog.com", "airizzos.com"];
   const isMainDomain = mainDomains.some(domain => hostname.includes(domain));
   const isLocalDev = hostname.includes("localhost") || 
                      hostname.includes("replit.dev") || 
-                     hostname.includes("replit.app");
+                     hostname.includes("replit.app") ||
+                     hostname.includes("render.com") ||
+                     hostname.includes("onrender.com");
   const isCustomDomain = !isMainDomain && !isLocalDev && hostname.includes(".");
   
   if (isCustomDomain) {
