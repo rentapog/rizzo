@@ -442,12 +442,43 @@ export default function Home() {
               <div className="bg-white rounded-xl p-6 shadow-lg border border-green-100 text-center">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
                 <h4 className="font-bold text-slate-900 mb-2">Daily Billing Starts</h4>
-                <p className="text-sm text-slate-600">After 3 days, automatic daily charges begin from your account</p>
+                <p className="text-sm text-slate-600">After 3 days OR when you get 3 subscribers, automatic daily charges begin</p>
                 <p className="text-xs text-purple-600 mt-2 font-semibold">$20 - $499/day based on package</p>
               </div>
             </div>
 
             <div className="bg-white rounded-xl p-6 border border-green-200 max-w-3xl mx-auto mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-slate-900 mb-2">🎯 When Does Daily Billing Start?</h4>
+                  <p className="text-slate-700 mb-3">
+                    Your <span className="font-bold text-green-700">3-day FREE trial</span> ends when <span className="font-bold">either</span> of these happens first:
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-4 mb-3">
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <p className="font-bold text-blue-900 mb-1">⏰ Option 1: Time Runs Out</p>
+                      <p className="text-sm text-blue-800">After 3 full days from signup, daily billing automatically starts</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                      <p className="font-bold text-purple-900 mb-1">👥 Option 2: You Get 3 Subscribers</p>
+                      <p className="text-sm text-purple-800">Once you have 3 paying referrals, you're in profit mode - daily billing begins!</p>
+                    </div>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                    <p className="text-sm text-amber-900">
+                      <span className="font-bold">💡 Smart System:</span> If you get 3 subscribers within your trial, you'll already be earning commissions that cover your daily fees. That's why billing starts early - you're already profitable!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0">
                   <ShieldCheck className="h-8 w-8 text-green-600" />
