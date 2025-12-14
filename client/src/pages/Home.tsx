@@ -10,8 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 export default function Home() {
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [subscribedName, setSubscribedName] = useState("");
@@ -62,18 +60,8 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !email || !username || !password) {
+    if (!firstName || !email) {
       toast({ title: "Error", description: "Please fill in all fields" });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters" });
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      toast({ title: "Error", description: "Username can only contain letters, numbers, and underscores" });
       return;
     }
 
@@ -83,15 +71,13 @@ export default function Home() {
 
     setLoading(true);
     try {
-      // Create full account via new endpoint
+      // Create full account via new endpoint (username and password auto-generated)
       const res = await fetch("/api/affiliates/home-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           email, 
-          name: firstName, 
-          username: username.toLowerCase(),
-          password,
+          name: firstName,
           referrerCode: currentReferrerCode 
         }),
       });
@@ -107,14 +93,13 @@ export default function Home() {
           body: JSON.stringify({ 
             email, 
             name: firstName,
-            username: username.toLowerCase(),
             referrerCode: currentReferrerCode,
             timestamp: new Date().toISOString() 
           }),
         }).catch(() => {});
 
         // Redirect straight to packages after signup
-        const packagesCode = data.packagesAffiliateCode || data.affiliateLink || username.toLowerCase();
+        const packagesCode = data.packagesAffiliateCode || data.affiliateLink || data.username;
         window.location.href = `https://packages.rentapog.com/?aff=${packagesCode}`;
       } else {
         const data = await res.json();
@@ -246,8 +231,14 @@ export default function Home() {
                         </div>
                       )}
 
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-blue-800">
+                          <span className="font-bold">Quick signup!</span> We'll create your username and password, then email your login details.
+                        </p>
+                      </div>
+
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Your First Name</label>
+                        <label className="text-sm font-semibold text-slate-700">Your Name</label>
                         <Input 
                           type="text" 
                           placeholder="John" 
@@ -273,35 +264,6 @@ export default function Home() {
                             required
                           />
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Choose Your Username</label>
-                        <Input 
-                          type="text" 
-                          placeholder="johndoe" 
-                          className="h-12 text-base border-2 border-slate-200 focus:border-blue-600 rounded-lg"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                          data-testid="input-username"
-                          required
-                        />
-                        <p className="text-xs text-slate-500">Your affiliate link will be: <span className="font-bold text-blue-600">rentapog.com/?aff={username || "yourusername"}</span></p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Create Password</label>
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          className="h-12 text-base border-2 border-slate-200 focus:border-slate-400 rounded-lg"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          data-testid="input-password"
-                          required
-                          minLength={6}
-                        />
-                        <p className="text-xs text-slate-500">Minimum 6 characters</p>
                       </div>
 
                       <Button 

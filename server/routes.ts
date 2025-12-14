@@ -252,11 +252,11 @@ export async function registerRoutes(
   // Homepage signup - creates full account with username as affiliate link
   app.post("/api/affiliates/home-signup", async (req, res) => {
     try {
-      const { email, name, username, password, referrerCode } = req.body;
+      const { email, name, referrerCode } = req.body;
       
       // Validate required fields
-      if (!email || !username || !password) {
-        return res.status(400).json({ error: "Email, username, and password are required" });
+      if (!email || !name) {
+        return res.status(400).json({ error: "Email and name are required" });
       }
 
       // Require referrer code (affiliate link in URL)
@@ -270,31 +270,34 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid email format" });
       }
 
-      // Validate username format
-      if (!/^[a-z0-9_]+$/.test(username)) {
-        return res.status(400).json({ error: "Username can only contain lowercase letters, numbers, and underscores" });
-      }
-
-      if (username.length < 3 || username.length > 20) {
-        return res.status(400).json({ error: "Username must be 3-20 characters" });
-      }
-
-      // Check password length
-      if (password.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
-
       // Check if email already exists
       const existingEmail = await storage.getUserByEmail(email);
       if (existingEmail) {
         return res.status(400).json({ error: "Email already in use" });
       }
 
-      // Check if username/referralCode already exists
-      const existingUsername = await storage.getUserByReferralCode(username);
-      if (existingUsername) {
-        return res.status(400).json({ error: "Username already taken" });
+      // AUTO-GENERATE username from email prefix + random numbers
+      const emailPrefix = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      let username = emailPrefix;
+      let usernameExists = await storage.getUserByReferralCode(username);
+      
+      // If username exists, add random numbers until we find a unique one
+      let attempts = 0;
+      while (usernameExists && attempts < 10) {
+        const randomNum = Math.floor(Math.random() * 9999);
+        username = `${emailPrefix}${randomNum}`;
+        usernameExists = await storage.getUserByReferralCode(username);
+        attempts++;
       }
+
+      // If still not unique after 10 attempts, use timestamp
+      if (usernameExists) {
+        username = `${emailPrefix}${Date.now().toString().slice(-4)}`;
+      }
+
+      // AUTO-GENERATE a secure random password (12 characters)
+      const crypto = await import("crypto");
+      const password = crypto.randomBytes(6).toString('base64').slice(0, 12).replace(/[+/=]/g, '0');
 
       // Hash password
       const hashedPassword = await bcryptjs.hash(password, 10);
@@ -332,56 +335,59 @@ export async function registerRoutes(
         console.error("[Home Signup] Error checking trial threshold:", trialErr);
       }
 
-      // Send welcome email with their affiliate link
+      // Send welcome email with their affiliate link and login credentials
       try {
-        const { Resend } = await import("resend");
-        const resendApiKey = process.env.RESEND_API_KEY;
-        if (resendApiKey) {
-          const resend = new Resend(resendApiKey);
-          const personalLink = `https://rentapog.com/?aff=${username}`;
-          const packagesLink = `https://packages.rentapog.com/?aff=${packagesAffiliateCode}`;
-          
-          await resend.emails.send({
-            from: "RentAPog <sales@rentapog.com>",
-            to: email,
-            subject: "Welcome to RentAPog - Your Affiliate Link is Ready!",
-            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #1e40af;">Welcome to RentAPog, ${name || username}!</h2>
-              <p style="font-size: 16px; color: #333;">Your account has been created and your affiliate link is ready:</p>
-              
-              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-                <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Your Affiliate Link:</p>
-                <p style="font-size: 20px; color: #0066cc; font-weight: bold; margin: 0 0 15px 0;">rentapog.com/?aff=${username}</p>
-              </div>
-              
-              <div style="background: #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-                <p style="margin: 0 0 10px 0; color: white; font-weight: bold;">Next Step - Get Your Package:</p>
-                <a href="${packagesLink}" style="display: inline-block; background: white; color: #10b981; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">View Packages</a>
-              </div>
-              
-              <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
-                <strong>How You Earn:</strong>
-                <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-                  <li>100% commission on the 1st sale</li>
-                  <li>Admin gets the 2nd sale (covers costs)</li>
-                  <li>100% commission on the 3rd and ALL future sales!</li>
-                </ul>
-              </div>
-              
-              <p style="color: #666;">Share your link everywhere: social media, email, forums... anywhere!</p>
-              
-              <p style="text-align: center; margin-top: 30px;">
-                <a href="https://backend.rentapog.com" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Login to Dashboard</a>
-              </p>
-              
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-                <p>RentAPog - Daily Domain Rental Platform</p>
-              </div>
-            </div>`,
-            text: `Welcome to RentAPog!\n\nYour affiliate link is ready:\nrentapog.com/?aff=${username}\n\nNext Step - Get Your Package:\n${packagesLink}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nLogin: https://backend.rentapog.com`,
-          });
-          console.log(`[Home Signup] Welcome email sent to ${email}`);
-        }
+        const siteBranding = getSiteBranding();
+        const personalLink = `https://rentapog.com/?aff=${username}`;
+        const packagesLink = `https://packages.rentapog.com/?aff=${packagesAffiliateCode}`;
+        
+        await sendEmail({
+          to: email,
+          subject: `Welcome to ${siteBranding.name} - Your Affiliate Link is Ready!`,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #1e40af;">Welcome to ${siteBranding.name}, ${name || username}!</h2>
+            <p style="font-size: 16px; color: #333;">Your account has been created successfully!</p>
+            
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0; color: #92400e; font-weight: bold;">Your Login Credentials:</p>
+              <p style="margin: 5px 0; color: #78350f;"><strong>Email:</strong> ${email}</p>
+              <p style="margin: 5px 0; color: #78350f;"><strong>Username:</strong> ${username}</p>
+              <p style="margin: 5px 0; color: #78350f;"><strong>Password:</strong> ${password}</p>
+              <p style="margin: 10px 0 0 0; font-size: 12px; color: #92400e;">Keep this email safe - you'll need these to login!</p>
+            </div>
+            
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Your Affiliate Link:</p>
+              <p style="font-size: 20px; color: #0066cc; font-weight: bold; margin: 0 0 15px 0;">rentapog.com/?aff=${username}</p>
+            </div>
+            
+            <div style="background: #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0 0 10px 0; color: white; font-weight: bold;">Next Step - Get Your Package:</p>
+              <a href="${packagesLink}" style="display: inline-block; background: white; color: #10b981; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">View Packages</a>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+              <strong>How You Earn:</strong>
+              <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                <li>100% commission on the 1st sale</li>
+                <li>Admin gets the 2nd sale (covers costs)</li>
+                <li>100% commission on the 3rd and ALL future sales!</li>
+              </ul>
+            </div>
+            
+            <p style="color: #666;">Share your link everywhere: social media, email, forums... anywhere!</p>
+            
+            <p style="text-align: center; margin-top: 30px;">
+              <a href="https://backend.rentapog.com" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Login to Dashboard</a>
+            </p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
+              <p>${siteBranding.name} - Daily Domain Rental Platform</p>
+            </div>
+          </div>`,
+          text: `Welcome to ${siteBranding.name}!\n\nYour Login Credentials:\nEmail: ${email}\nUsername: ${username}\nPassword: ${password}\n\nYour affiliate link is ready:\nrentapog.com/?aff=${username}\n\nNext Step - Get Your Package:\n${packagesLink}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nLogin: https://backend.rentapog.com`,
+        });
+        console.log(`[Home Signup] Welcome email with credentials sent to ${email}`);
       } catch (emailErr) {
         console.error("[Home Signup] Failed to send welcome email:", emailErr);
       }
@@ -390,6 +396,7 @@ export async function registerRoutes(
         success: true, 
         message: "Account created successfully!",
         affiliateLink: username,
+        username: username,
         packagesAffiliateCode,
         user: { id: user.id, email: user.email, referralCode: user.referralCode }
       });
