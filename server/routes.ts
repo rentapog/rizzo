@@ -807,7 +807,7 @@ export async function registerRoutes(
                   <p style="margin: 0; color: #92400e;"><strong>How It Works:</strong></p>
                   <ul style="color: #78350f; margin: 10px 0;">
                     <li>These leads received your affiliate link in their emails</li>
-                    <li>Get 3+ referrals? You keep ALL sales - no 2nd sale pass-up!</li>
+                    <li>You earn 100% commission on all sales except your 2nd sale</li>
                     <li>More purchases = more leads assigned to you!</li>
                   </ul>
                 </div>
@@ -842,24 +842,16 @@ export async function registerRoutes(
             const tierSalesRecord = await storage.getUserTierSales(referrer.id, packageAmount);
             const tierSaleNumber = (tierSalesRecord?.salesCount || 0) + 1;
             
-            // Check if referrer has 3+ referrals - if yes, they keep ALL sales (no pass-up)
-            const referrerReferrals = await storage.getUserReferrals(referrer.id);
-            const hasThreeOrMoreReferrals = referrerReferrals.length >= 3;
-            
             // Pass-up logic: 2nd sale AT EACH TIER goes to admin, all others go to referrer
-            // EXCEPTION: If referrer has 3+ referrals, they keep ALL sales (no pass-up)
             // Also pass up if buyer's level exceeds seller's level
             let passedUpTo: string | null = null;
             let passedUpReason: string | null = null;
             
-            if (hasThreeOrMoreReferrals) {
-              // Referrer has 3+ referrals - they keep ALL sales, no pass-up!
-              console.log(`[Auto-Login] ✓ Referrer ${referrer.referralCode} has ${referrerReferrals.length} referrals - keeping this sale (no pass-up)`);
-            } else if (tierSaleNumber === 2 && !referrer.isSubAdmin) {
-              // Sub-admins keep their 2nd sale; regular users pass it up (unless they have 3+ referrals)
+            if (tierSaleNumber === 2 && !referrer.isSubAdmin) {
+              // Sub-admins keep their 2nd sale; regular users pass it up
               passedUpTo = "admin";
               passedUpReason = "sale_2_tier";
-              console.log(`[Auto-Login] Tier pass-up: 2nd sale at $${(packageAmount / 100).toFixed(2)} tier for ${referrer.referralCode} (has ${referrerReferrals.length} referrals)`);
+              console.log(`[Auto-Login] Tier pass-up: 2nd sale at $${(packageAmount / 100).toFixed(2)} tier for ${referrer.referralCode}`);
             } else if (referrer.packagePurchased && packageAmount > referrer.packagePurchased) {
               passedUpTo = "admin";
               passedUpReason = "under_leveled";

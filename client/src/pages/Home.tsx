@@ -481,31 +481,25 @@ export default function Home() {
                 <div>
                   <h4 className="font-bold text-slate-900 mb-2">Fair Pass-Up System</h4>
                   <p className="text-slate-600 mb-3">
-                    To keep the platform running smoothly, your <span className="font-bold text-amber-700">2nd sale passes up to admin</span>... 
-                    BUT if you get <span className="font-bold text-green-700">3 or more referrals, you keep ALL sales - no more pass-ups!</span>
+                    To keep the platform running smoothly, your <span className="font-bold text-amber-700">2nd sale always passes up to admin</span>. 
+                    This covers ongoing platform costs. But here's the great part:
                   </p>
-                  <div className="grid md:grid-cols-3 gap-3 mb-3">
+                  <div className="grid md:grid-cols-3 gap-3">
                     <div className="bg-white rounded-lg p-3 border border-amber-100 text-center">
                       <p className="text-2xl font-bold text-green-600">1st Sale</p>
                       <p className="text-sm text-slate-600">100% Yours</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-amber-100 text-center">
                       <p className="text-2xl font-bold text-amber-600">2nd Sale</p>
-                      <p className="text-sm text-slate-600">Goes to Admin*</p>
+                      <p className="text-sm text-slate-600">Goes to Admin</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-amber-100 text-center">
                       <p className="text-2xl font-bold text-green-600">3rd → ∞</p>
                       <p className="text-sm text-slate-600">100% Yours Forever!</p>
                     </div>
                   </div>
-                  <div className="bg-green-50 rounded-lg p-4 border-2 border-green-300">
-                    <p className="text-sm font-bold text-green-800 mb-2">🎉 BONUS: Get 3+ Referrals = Keep Everything!</p>
-                    <p className="text-sm text-green-700">
-                      Once you have 3 or more active referrals, you keep <span className="font-bold">ALL your sales - including the 2nd one!</span> No more pass-ups. This rewards active members who build the community.
-                    </p>
-                  </div>
                   <p className="text-center text-sm text-slate-600 mt-4">
-                    <span className="text-xs">*Unless you have 3+ referrals - then you keep it all!</span>
+                    That's right - after your 2nd sale, <span className="font-bold text-green-700">every single sale from #3 onwards is 100% yours, forever!</span> No caps, no limits.
                   </p>
                 </div>
               </div>
