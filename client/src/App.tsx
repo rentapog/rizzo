@@ -52,9 +52,9 @@ import BrandedFranchise from "@/pages/BrandedFranchise";
 function Router() {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
 
-  // If on backend.rentapog.com, show full backoffice dashboard
+  // If on backend.rentapog.com or backend.airizzos.com, show full backoffice dashboard
   // Sub-admins see SubAdminDashboard, regular users/admin see Backoffice
-  if (hostname.includes("backend.rentapog.com")) {
+  if (hostname.includes("backend.rentapog.com") || hostname.includes("backend.airizzos.com")) {
     // Check if user is a sub-admin from localStorage
     const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
     const user = userStr ? JSON.parse(userStr) : null;
@@ -83,8 +83,8 @@ function Router() {
     );
   }
 
-  // If on packages.rentapog.com, show packages with tier support
-  if (hostname.includes("packages.rentapog.com")) {
+  // If on packages.rentapog.com or packages.airizzos.com, show packages with tier support
+  if (hostname.includes("packages.rentapog.com") || hostname.includes("packages.airizzos.com")) {
     return (
       <Switch>
         <Route path="/tier/:tier">{(props: any) => <PackageTier tierPrice={parseInt(props.params.tier)} />}</Route>
@@ -144,29 +144,30 @@ function Router() {
     );
   }
 
-  // Check for custom domain branding (not rentapog.com, not localhost, not replit.dev)
-  const isCustomDomain = !hostname.includes("rentapog.com") && 
-                          !hostname.includes("localhost") && 
-                          !hostname.includes("replit.dev") &&
-                          !hostname.includes("replit.app") &&
-                          hostname.includes(".");
+  // Check for custom domain branding (not rentapog.com, not airizzos.com, not localhost, not replit.dev)
+  const mainDomains = ["rentapog.com", "airizzos.com"];
+  const isMainDomain = mainDomains.some(domain => hostname.includes(domain));
+  const isLocalDev = hostname.includes("localhost") || 
+                     hostname.includes("replit.dev") || 
+                     hostname.includes("replit.app");
+  const isCustomDomain = !isMainDomain && !isLocalDev && hostname.includes(".");
   
   if (isCustomDomain) {
     // This is a custom branded domain - serve the branded franchise page
     return <BrandedFranchise customDomain={hostname} />;
   }
 
-  // Check for branded franchise subdomains (*.rentapog.com but not known subdomains)
+  // Check for branded franchise subdomains (*.rentapog.com or *.airizzos.com but not known subdomains)
   const knownSubdomains = ["backend", "backoffice", "packages", "domain", "sales", "family", "family1", "family2", "family3", "family4", "family5", "family6", "family7", "www", "localhost"];
   const hostParts = hostname.split(".");
-  if (hostname.includes("rentapog.com") && hostParts.length >= 3) {
+  if ((hostname.includes("rentapog.com") || hostname.includes("airizzos.com")) && hostParts.length >= 3) {
     const subdomain = hostParts[0].toLowerCase();
     if (!knownSubdomains.includes(subdomain)) {
       return <BrandedFranchise brandSlug={subdomain} />;
     }
   }
 
-  // Default: Main rentapog.com domain
+  // Default: Main rentapog.com or airizzos.com domain
   return (
     <Switch>
       <Route path="/">{() => <Home />}</Route>
