@@ -2,7 +2,11 @@ import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 
 const getApiBaseUrl = () => {
-  // Use Replit backend for API calls
+  // If on packages subdomain, use Render backend
+  if (typeof window !== 'undefined' && window.location.hostname.includes('packages.')) {
+    return 'https://rizz-4zvv.onrender.com';
+  }
+  // Otherwise use Replit backend
   return 'https://referral-cascade--rentapog.replit.app';
 };
 
