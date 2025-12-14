@@ -296,7 +296,11 @@ export default function PackageTier({ tierPrice }: PackageTierProps) {
   const handleBuyPackage = async (pkg: Package) => {
     setLoadingPackageId(pkg.id);
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/packages/checkout`, {
+      const apiUrl = `${getApiBaseUrl()}/api/packages/checkout`;
+      console.log("Making checkout request to:", apiUrl);
+      console.log("Package ID:", pkg.id, "Affiliate:", affiliateCode);
+      
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -305,7 +309,18 @@ export default function PackageTier({ tierPrice }: PackageTierProps) {
         }),
       });
       
+      console.log("Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Response error:", errorText);
+        alert(`Error: ${response.status} - ${errorText || "Server error"}`);
+        return;
+      }
+      
       const data = await response.json();
+      console.log("Response data:", data);
+      
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -315,7 +330,7 @@ export default function PackageTier({ tierPrice }: PackageTierProps) {
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      alert("Something went wrong. Please try again.");
+      alert(`Network error: ${error instanceof Error ? error.message : "Please check your connection"}`);
     } finally {
       setLoadingPackageId(null);
     }
