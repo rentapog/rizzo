@@ -3977,14 +3977,17 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid package ID" });
       }
 
-      // Check if Stripe is configured
-      const stripeApiKey = process.env.STRIPE_API_KEY;
-      if (!stripeApiKey) {
-        console.error("[Package Checkout] STRIPE_API_KEY not configured");
+      // Get domain-specific Stripe config (test keys for airizzos.com, production for rentapog.com)
+      const hostname = req.get('host') || '';
+      const stripeConfig = getStripeConfig(hostname);
+      
+      if (!stripeConfig.secretKey) {
+        console.error("[Package Checkout] Stripe API key not configured for", hostname);
         return res.status(500).json({ error: "Payment system not configured. Please contact support." });
       }
 
-      const stripe = new Stripe(stripeApiKey, { apiVersion: "2025-08-27.basil" });
+      const stripe = new Stripe(stripeConfig.secretKey, { apiVersion: "2025-08-27.basil" });
+      console.log(`[Package Checkout] Using ${stripeConfig.isTest ? 'TEST' : 'PRODUCTION'} mode for ${hostname}`);
       
       // Look up the affiliate user if we have an affiliate code
       let referrerId = null;
