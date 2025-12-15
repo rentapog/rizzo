@@ -293,7 +293,7 @@ export async function registerRoutes(
   app.post("/api/affiliates/home-signup", async (req, res) => {
     try {
       const { email, name, referrerCode } = req.body;
-      
+
       // Validate required fields
       if (!email || !name) {
         return res.status(400).json({ error: "Email and name are required" });
@@ -312,12 +312,18 @@ export async function registerRoutes(
       }
 
       // Add to email leads table (will be assigned to buyers via rotating pool)
-      await storage.createEmailLead({
-        email,
-        source: referrerCode ? `referral:${referrerCode}` : "homepage",
-        affiliateLink: referrerCode || null,
-        verified: false,
-      });
+      try {
+        await storage.createEmailLead({
+          email,
+          source: referrerCode ? `referral:${referrerCode}` : "homepage",
+          affiliateLink: referrerCode || null,
+          verified: false,
+        });
+      } catch (dbErr: any) {
+        console.error(`[Home Signup] DB Error:`, dbErr);
+        // Return DB error details for debugging
+        return res.status(500).json({ error: dbErr?.message || "DB error", details: dbErr });
+      }
 
       console.log(`[Home Signup] ✓ Email added to list: ${email} | Source: ${referrerCode || "homepage"}`);
 
@@ -328,7 +334,7 @@ export async function registerRoutes(
         const packagesLink = referrerCode 
           ? `https://${siteBranding.domain}/packages?aff=${referrerCode}`
           : `https://${siteBranding.domain}/packages`;
-        
+
         const emailResult = await sendEmail({
           to: email,
           subject: `Welcome to ${siteBranding.name}`,
@@ -362,7 +368,7 @@ export async function registerRoutes(
           </div>`,
           text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${siteBranding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${siteBranding.name}`,
         });
-        
+
         if (emailResult.success) {
           console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via ${emailResult.provider}`);
         } else {
@@ -378,7 +384,8 @@ export async function registerRoutes(
       });
     } catch (error: any) {
       console.error("[Home Signup] Error:", error);
-      res.status(500).json({ error: error?.message || "Signup failed" });
+      // Return error stack for debugging
+      res.status(500).json({ error: error?.message || "Signup failed", stack: error?.stack || null, details: error });
     }
   });
 
@@ -721,6 +728,7 @@ export async function registerRoutes(
         user = await storage.createUser({
           email: customerEmail,
           name: customerEmail.split('@')[0],
+          username: referralCode, // Set username to referralCode (affiliate link)
           password: hashedPassword,
           referralCode,
           affiliateLink: affiliateCode,
@@ -730,7 +738,7 @@ export async function registerRoutes(
         
         console.log(`✓ [Auto-Login] Account created for ${customerEmail} | Code: ${referralCode}`);
         
-        // Send welcome email with login credentials
+        // Always send welcome email with login credentials (even if user already exists, e.g. retry)
         const siteBranding = getSiteBranding();
         await sendEmail({
           to: customerEmail,
@@ -743,7 +751,7 @@ export async function registerRoutes(
               <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
                 <p style="margin: 5px 0;"><strong>Email:</strong> ${customerEmail}</p>
                 <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: white; padding: 2px 8px; border-radius: 4px;">${randomPassword}</code></p>
-                <p style="margin: 5px 0;"><strong>Referral Code:</strong> ${referralCode}</p>
+                <p style="margin: 5px 0;"><strong>Username (Affiliate Link):</strong> ${referralCode}</p>
               </div>
 
               <p style="text-align: center; margin-top: 30px;">
@@ -753,9 +761,9 @@ export async function registerRoutes(
               <p style="color: #64748b; font-size: 14px; margin-top: 30px;">Your free trial has started! You have 3 days OR until you get 3 referrals (whichever comes first) before daily billing begins.</p>
             </div>
           `,
-          text: `Welcome to ${siteBranding.name}!\n\nYour Login Credentials:\nEmail: ${customerEmail}\nPassword: ${randomPassword}\nReferral Code: ${referralCode}\n\nLogin at: https://${siteBranding.domain}/backend`
+          text: `Welcome to ${siteBranding.name}!\n\nYour Login Credentials:\nEmail: ${customerEmail}\nPassword: ${randomPassword}\nUsername (Affiliate Link): ${referralCode}\n\nLogin at: https://${siteBranding.domain}/backend`
         });
-        
+
         console.log(`✓ [Auto-Login] Login credentials sent to ${customerEmail}`);
       }
 
