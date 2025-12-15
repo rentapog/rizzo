@@ -3968,6 +3968,11 @@ export async function registerRoutes(
       const hostname = req.body.hostname || req.get('host') || '';
       const stripeConfig = getStripeConfig(hostname);
       
+      // Determine the correct domain for success/cancel URLs
+      const baseDomain = hostname.includes('airizzos.com') ? 'airizzos.com' : 'rentapog.com';
+      const backendUrl = hostname.includes('airizzos.com') ? `https://${baseDomain}/backend` : 'https://backend.rentapog.com';
+      const packagesUrl = hostname.includes('airizzos.com') ? `https://${baseDomain}/packages` : 'https://packages.rentapog.com';
+      
       if (!stripeConfig.secretKey) {
         console.error("[Package Checkout] Stripe API key not configured for", hostname);
         return res.status(500).json({ error: "Payment system not configured. Please contact support." });
@@ -4014,8 +4019,8 @@ export async function registerRoutes(
             referrerId: referrerId ? referrerId.toString() : "",
           },
         },
-        success_url: `https://backend.rentapog.com/api/auth/auto-login?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `https://packages.rentapog.com/?aff=${affiliateCode || "rentapog"}`,
+        success_url: `${backendUrl}/api/auth/auto-login?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${packagesUrl}/?aff=${affiliateCode || "rentapog"}`,
         metadata: {
           paymentType: "package_subscription",
           packageId: packageId.toString(),
