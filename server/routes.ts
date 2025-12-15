@@ -281,7 +281,7 @@ export async function registerRoutes(
     }
   });
 
-  // Homepage signup - creates full account with username as affiliate link
+  // Homepage signup - just adds to email list (no account creation until package purchase)
   app.post("/api/affiliates/home-signup", async (req, res) => {
     try {
       const { email, name, referrerCode } = req.body;
@@ -291,133 +291,67 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Email and name are required" });
       }
 
-      // Require referrer code (affiliate link in URL)
-      if (!referrerCode) {
-        return res.status(400).json({ error: "You must sign up through an affiliate link" });
-      }
-
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return res.status(400).json({ error: "Invalid email format" });
       }
 
-      // Check if email already exists
-      const existingEmail = await storage.getUserByEmail(email);
-      if (existingEmail) {
-        return res.status(400).json({ error: "Email already in use" });
+      // Check if email already in list
+      const existingLead = await storage.getEmailLeadByEmail(email);
+      if (existingLead) {
+        return res.status(400).json({ error: "Email already subscribed" });
       }
 
-      // AUTO-GENERATE username from email prefix + random numbers
-      const emailPrefix = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-      let username = emailPrefix;
-      let usernameExists = await storage.getUserByReferralCode(username);
-      
-      // If username exists, add random numbers until we find a unique one
-      let attempts = 0;
-      while (usernameExists && attempts < 10) {
-        const randomNum = Math.floor(Math.random() * 9999);
-        username = `${emailPrefix}${randomNum}`;
-        usernameExists = await storage.getUserByReferralCode(username);
-        attempts++;
-      }
-
-      // If still not unique after 10 attempts, use timestamp
-      if (usernameExists) {
-        username = `${emailPrefix}${Date.now().toString().slice(-4)}`;
-      }
-
-      // AUTO-GENERATE a secure random password (12 characters)
-      const crypto = await import("crypto");
-      const password = crypto.randomBytes(6).toString('base64').slice(0, 12).replace(/[+/=]/g, '0');
-
-      // Hash password
-      const hashedPassword = await bcryptjs.hash(password, 10);
-
-      // Create user with username as their referralCode (affiliate link)
-      const user = await storage.createUser({
+      // Add to email leads table (will be assigned to buyers via rotating pool)
+      await storage.createEmailLead({
         email,
-        name: name || email.split("@")[0],
-        password: hashedPassword,
-        affiliateLink: referrerCode, // who referred them
-        referralCode: username, // their own affiliate code = username
+        name,
+        referralSource: referrerCode || "direct",
+        subscribedAt: new Date(),
       });
 
-      console.log(`[Home Signup] New user: ${email} | Username: ${username} | Referred by: ${referrerCode}`);
+      console.log(`[Home Signup] ✓ Email added to list: ${email} | Source: ${referrerCode || "direct"}`);
 
-      // Count how many users this referrer has already referred (for pass-up logic)
-      const referrerSalesCount = await storage.getReferralCountByCode(referrerCode);
-      const thisIsWhichReferral = referrerSalesCount; // This new user is the Nth referral
-      
-      // Pass-up logic: 2nd referral goes to admin, all others go to referrer
-      const packagesAffiliateCode = (thisIsWhichReferral === 2) ? "rentapog" : referrerCode;
-      console.log(`[Home Signup] Referral #${thisIsWhichReferral} for ${referrerCode} | Packages link goes to: ${packagesAffiliateCode}`);
-
-      // CHECK TRIAL THRESHOLD: If referrer has active trial and got 3 referrals, end trial early
-      try {
-        const referrer = await storage.getUserByReferralCode(referrerCode);
-        if (referrer && referrer.trialStatus === "active") {
-          const hasMetThreshold = await storage.checkTrialReferralThreshold(referrer.id);
-          if (hasMetThreshold) {
-            await storage.endUserTrial(referrer.id, "referrals_met");
-            console.log(`[Home Signup] Trial ended early for ${referrerCode} - 3 referrals achieved!`);
-          }
-        }
-      } catch (trialErr) {
-        console.error("[Home Signup] Error checking trial threshold:", trialErr);
-      }
-
-      // Send welcome email with their affiliate link and login credentials
+      // Send simple welcome email (no login credentials)
       try {
         const siteBranding = getSiteBranding();
-        const personalLink = `https://rentapog.com/?aff=${username}`;
-        const packagesLink = `https://packages.rentapog.com/?aff=${packagesAffiliateCode}`;
+        const packagesLink = referrerCode 
+          ? `https://packages.${siteBranding.domain}/?aff=${referrerCode}`
+          : `https://packages.${siteBranding.domain}`;
         
         const emailResult = await sendEmail({
           to: email,
-          subject: `Welcome to ${siteBranding.name} - Your Affiliate Link is Ready!`,
+          subject: `Welcome to ${siteBranding.name}! 🎉`,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e40af;">Welcome to ${siteBranding.name}, ${name || username}!</h2>
-            <p style="font-size: 16px; color: #333;">Your account has been created successfully!</p>
-            
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0; color: #92400e; font-weight: bold;">Your Login Credentials:</p>
-              <p style="margin: 5px 0; color: #78350f;"><strong>Email:</strong> ${email}</p>
-              <p style="margin: 5px 0; color: #78350f;"><strong>Username:</strong> ${username}</p>
-              <p style="margin: 5px 0; color: #78350f;"><strong>Password:</strong> ${password}</p>
-              <p style="margin: 10px 0 0 0; font-size: 12px; color: #92400e;">Keep this email safe - you'll need these to login!</p>
-            </div>
-            
-            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Your Affiliate Link:</p>
-              <p style="font-size: 20px; color: #0066cc; font-weight: bold; margin: 0 0 15px 0;">rentapog.com/?aff=${username}</p>
-            </div>
+            <h2 style="color: #1e40af;">Thanks for Joining, ${name}! 🎉</h2>
+            <p style="font-size: 16px; color: #333;">You're on the list! We'll keep you updated with the latest opportunities.</p>
             
             <div style="background: #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <p style="margin: 0 0 10px 0; color: white; font-weight: bold;">Next Step - Get Your Package:</p>
+              <p style="margin: 0 0 10px 0; color: white; font-weight: bold; font-size: 18px;">Ready to Get Started?</p>
+              <p style="margin: 0 0 15px 0; color: white;">Choose a package and start earning today!</p>
               <a href="${packagesLink}" style="display: inline-block; background: white; color: #10b981; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">View Packages</a>
             </div>
             
-            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
-              <strong>How You Earn:</strong>
-              <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-                <li>100% commission on the 1st sale</li>
-                <li>Admin gets the 2nd sale (covers costs)</li>
-                <li>100% commission on the 3rd and ALL future sales!</li>
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+              <p style="margin: 0; color: #1e40af;"><strong>What's Next?</strong></p>
+              <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569;">
+                <li>Choose your package level (starting at just $20/day)</li>
+                <li>Start your FREE 3-day trial - no payment required!</li>
+                <li>Get your login credentials after purchase</li>
+                <li>Start earning commissions immediately</li>
               </ul>
             </div>
             
-            <p style="color: #666;">Share your link everywhere: social media, email, forums... anywhere!</p>
-            
-            <p style="text-align: center; margin-top: 30px;">
-              <a href="https://backend.rentapog.com" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Login to Dashboard</a>
+            <p style="color: #666; text-align: center; margin-top: 30px;">
+              Questions? We're here to help!
             </p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-              <p>${siteBranding.name} - Daily Domain Rental Platform</p>
+              <p>${siteBranding.name} - Your Path to Daily Income</p>
             </div>
           </div>`,
-          text: `Welcome to ${siteBranding.name}!\n\nYour Login Credentials:\nEmail: ${email}\nUsername: ${username}\nPassword: ${password}\n\nYour affiliate link is ready:\nrentapog.com/?aff=${username}\n\nNext Step - Get Your Package:\n${packagesLink}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nLogin: https://backend.rentapog.com`,
+          text: `Thanks for Joining, ${name}!\n\nYou're on the list! We'll keep you updated with the latest opportunities.\n\nReady to Get Started?\nChoose a package and start earning today!\n\nView Packages: ${packagesLink}\n\nWhat's Next?\n- Choose your package level (starting at just $20/day)\n- Start your FREE 3-day trial - no payment required!\n- Get your login credentials after purchase\n- Start earning commissions immediately\n\nQuestions? We're here to help!\n\n${siteBranding.name} - Your Path to Daily Income`,
         });
         
         if (emailResult.success) {
@@ -431,15 +365,11 @@ export async function registerRoutes(
 
       res.json({ 
         success: true, 
-        message: "Account created successfully!",
-        affiliateLink: username,
-        username: username,
-        packagesAffiliateCode,
-        user: { id: user.id, email: user.email, referralCode: user.referralCode }
+        message: "Thanks for subscribing! Check your email for next steps." 
       });
     } catch (error: any) {
       console.error("[Home Signup] Error:", error);
-      res.status(500).json({ error: error?.message || "Failed to create account" });
+      res.status(500).json({ error: error?.message || "Signup failed" });
     }
   });
 
