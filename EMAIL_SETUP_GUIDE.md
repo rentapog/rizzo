@@ -32,14 +32,14 @@ RESEND_API_KEY=re_YourResendAPIKey
 
 #### For Stripe Production (RentAPog):
 ```bash
-STRIPE_API_KEY=sk_live_YourProductionKey
-STRIPE_WEBHOOK_SECRET=whsec_YourProductionWebhookSecret
+STRIPE_API_KEY=sk_live_xxxxxxxxxxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxx
 ```
 
 #### For Stripe Test (Airizzos - Optional):
 ```bash
-STRIPE_TEST_SECRET_KEY=sk_test_YourTestKey
-STRIPE_TEST_WEBHOOK_SECRET=whsec_YourTestWebhookSecret
+STRIPE_TEST_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
+STRIPE_TEST_WEBHOOK_SECRET=whsec_test_xxxxxxxxxxxxxxxxxxxxx
 ```
 
 **Note**: If you don't set the TEST keys, Airizzos will use the production keys. Set TEST keys to use Stripe test mode for packages.airizzos.com.
@@ -133,7 +133,7 @@ When someone fills out the email form, you should see:
 2. Copy the **Secret key** (starts with `sk_test_`)
 3. Add to Render:
    ```bash
-   STRIPE_TEST_SECRET_KEY=sk_test_YourTestKey
+   STRIPE_TEST_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
    ```
 4. Redeploy
 

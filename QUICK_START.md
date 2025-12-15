@@ -17,8 +17,8 @@
 RESEND_API_KEY=re_YourKeyHere
 
 # Optional - for Airizzos test mode:
-STRIPE_TEST_SECRET_KEY=sk_test_YourTestKey
-STRIPE_TEST_WEBHOOK_SECRET=whsec_YourTestWebhook
+STRIPE_TEST_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
+STRIPE_TEST_WEBHOOK_SECRET=whsec_test_xxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### 2. Redeploy
