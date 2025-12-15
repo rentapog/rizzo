@@ -316,9 +316,10 @@ export async function registerRoutes(
       // Send simple welcome email (no login credentials)
       try {
         const siteBranding = getSiteBranding();
+        // For test site, just use main domain (packages subdomain not set up yet)
         const packagesLink = referrerCode 
-          ? `https://packages.${siteBranding.domain}/?aff=${referrerCode}`
-          : `https://packages.${siteBranding.domain}`;
+          ? `https://${siteBranding.domain}/?aff=${referrerCode}`
+          : `https://${siteBranding.domain}`;
         
         const emailResult = await sendEmail({
           to: email,
