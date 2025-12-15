@@ -2,11 +2,14 @@ import { useLocation, useParams } from "wouter";
 import { useState, useEffect } from "react";
 
 const getApiBaseUrl = () => {
-  // If on packages subdomain, use Render backend
-  if (typeof window !== 'undefined' && window.location.hostname.includes('packages.')) {
-    return 'https://rizz-4zvv.onrender.com';
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Use Render backend for airizzos.com or any packages subdomain
+    if (hostname.includes('airizzos.com') || hostname.includes('packages.')) {
+      return 'https://rizz-4zvv.onrender.com';
+    }
   }
-  // Otherwise use Replit backend
+  // Fallback for rentapog.com or local dev
   return 'https://referral-cascade--rentapog.replit.app';
 };
 
