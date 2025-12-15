@@ -706,7 +706,7 @@ export async function registerRoutes(
         
         // Generate random password
         const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).toUpperCase().slice(-4);
-        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        const hashedPassword = await bcryptjs.hash(randomPassword, 10);
         
         // Generate unique referral code
         const baseCode = customerEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
