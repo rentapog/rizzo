@@ -3970,7 +3970,9 @@ export async function registerRoutes(
       
       // Determine the correct domain for success/cancel URLs
       const baseDomain = hostname.includes('airizzos.com') ? 'airizzos.com' : 'rentapog.com';
-      const backendUrl = hostname.includes('airizzos.com') ? `https://${baseDomain}/backend` : 'https://backend.rentapog.com';
+      // For airizzos.com, routes are at root level (https://airizzos.com/api/...)
+      // For rentapog.com, routes are at backend subdomain (https://backend.rentapog.com/api/...)
+      const apiBaseUrl = hostname.includes('airizzos.com') ? `https://${baseDomain}` : 'https://backend.rentapog.com';
       const packagesUrl = hostname.includes('airizzos.com') ? `https://${baseDomain}/packages` : 'https://packages.rentapog.com';
       
       if (!stripeConfig.secretKey) {
@@ -4019,7 +4021,7 @@ export async function registerRoutes(
             referrerId: referrerId ? referrerId.toString() : "",
           },
         },
-        success_url: `${backendUrl}/api/auth/auto-login?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${apiBaseUrl}/api/auth/auto-login?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${packagesUrl}/?aff=${affiliateCode || "rentapog"}`,
         metadata: {
           paymentType: "package_subscription",
