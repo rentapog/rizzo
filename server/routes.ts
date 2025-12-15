@@ -72,9 +72,13 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
         await sgMail.default.send({
           to,
           from: branding.fromEmail,
+          replyTo: branding.email,
           subject,
           html,
           text,
+          headers: {
+            'List-Unsubscribe': `<mailto:${branding.email}?subject=unsubscribe>`,
+          },
         });
         
         console.log(`[Email] ✓ Sent via SendGrid to ${to}`);
@@ -96,9 +100,13 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
       await resend.emails.send({
         from: branding.fromEmail,
         to,
+        replyTo: branding.email,
         subject,
         html,
         text,
+        headers: {
+          'List-Unsubscribe': `<mailto:${branding.email}?subject=unsubscribe>`,
+        },
       });
       
       console.log(`[Email] ✓ Sent via Resend to ${to}`);
@@ -323,9 +331,9 @@ export async function registerRoutes(
         
         const emailResult = await sendEmail({
           to: email,
-          subject: `Welcome to ${siteBranding.name}! 🎉`,
+          subject: `Welcome to ${siteBranding.name}`,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e40af;">Thanks for Joining, ${name}! 🎉</h2>
+            <h2 style="color: #1e40af;">Thanks for Joining, ${name}!</h2>
             <p style="font-size: 16px; color: #333;">You're on the list! We'll keep you updated with the latest opportunities.</p>
             
             <div style="background: #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
@@ -721,7 +729,7 @@ export async function registerRoutes(
         const siteBranding = getSiteBranding();
         await sendEmail({
           to: customerEmail,
-          subject: `🎉 Welcome to ${siteBranding.name} - Your Login Credentials`,
+          subject: `Welcome to ${siteBranding.name} - Your Account Details`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2 style="color: #2563eb;">Welcome to ${siteBranding.name}!</h2>
