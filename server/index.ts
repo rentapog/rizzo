@@ -25,7 +25,10 @@ app.use((req, res, next) => {
     'https://family6.rentapog.com',
     'https://family7.rentapog.com',
     'https://rentapog.com',
-    'https://www.rentapog.com'
+    'https://www.rentapog.com',
+    'https://airizzos.com',
+    'https://www.airizzos.com',
+    'https://packages.airizzos.com'
   ];
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
