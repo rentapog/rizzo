@@ -306,12 +306,12 @@ export async function registerRoutes(
       // Add to email leads table (will be assigned to buyers via rotating pool)
       await storage.createEmailLead({
         email,
-        name,
-        referralSource: referrerCode || "direct",
-        subscribedAt: new Date(),
+        source: referrerCode ? `referral:${referrerCode}` : "homepage",
+        affiliateLink: referrerCode || null,
+        verified: false,
       });
 
-      console.log(`[Home Signup] ✓ Email added to list: ${email} | Source: ${referrerCode || "direct"}`);
+      console.log(`[Home Signup] ✓ Email added to list: ${email} | Source: ${referrerCode || "homepage"}`);
 
       // Send simple welcome email (no login credentials)
       try {
