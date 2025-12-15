@@ -316,11 +316,10 @@ export async function registerRoutes(
       // Send simple welcome email (no login credentials)
       try {
         const siteBranding = getSiteBranding();
-        // RentAPog has packages subdomain, AiRizzos doesn't (yet)
-        const usePackagesSubdomain = siteBranding.domain === 'rentapog.com';
+        // Use packages subdomain for both sites
         const packagesLink = referrerCode 
-          ? `https://${usePackagesSubdomain ? 'packages.' : ''}${siteBranding.domain}/?aff=${referrerCode}`
-          : `https://${usePackagesSubdomain ? 'packages.' : ''}${siteBranding.domain}`;
+          ? `https://packages.${siteBranding.domain}/?aff=${referrerCode}`
+          : `https://packages.${siteBranding.domain}`;
         
         const emailResult = await sendEmail({
           to: email,
