@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { users, emailLeads, domainRentals, affiliateSales, emailSchedules, adminDomains, teamMembers, deploymentSettings, emailCampaigns, domainNotifications, adminSessions, rentalContracts, rentalCharges, loginTokens, userTierSales, adminLoginAttempts, brandingSubscriptions, purchasedDomains, websiteProjects, userSiteProjects } from "@shared/schema";
-import { eq, and, isNotNull, ne, lt, isNull } from "drizzle-orm";
+import { eq, and, isNotNull, ne, lt, isNull, sql } from "drizzle-orm";
 import type { User, EmailLead, DomainRental, AffiliateSale, EmailSchedule, AdminDomain, RentalContract, RentalCharge, BrandingSubscription, WebsiteProject, UserSiteProject } from "@shared/schema";
 
 export interface IStorage {

@@ -373,7 +373,7 @@ export async function registerRoutes(
         const personalLink = `https://rentapog.com/?aff=${username}`;
         const packagesLink = `https://packages.rentapog.com/?aff=${packagesAffiliateCode}`;
         
-        await sendEmail({
+        const emailResult = await sendEmail({
           to: email,
           subject: `Welcome to ${siteBranding.name} - Your Affiliate Link is Ready!`,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -501,7 +501,7 @@ export async function registerRoutes(
         const personalAffiliateLink = `https://${branding.domain}/?aff=${user.referralCode}`;
         const backendUrl = `https://backend.${branding.domain}`;
         
-        await sendEmail({
+        const emailResult = await sendEmail({
           to: user.email,
           subject: `Welcome to ${branding.name} - Your Login Details`,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

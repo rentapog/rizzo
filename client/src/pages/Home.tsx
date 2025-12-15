@@ -479,6 +479,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            <div className="bg-white rounded-xl p-6 border border-green-200 max-w-3xl mx-auto mb-6">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0">
                   <ShieldCheck className="h-8 w-8 text-green-600" />
