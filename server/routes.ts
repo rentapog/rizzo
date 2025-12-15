@@ -683,6 +683,11 @@ export async function registerRoutes(
       const customerEmail = session.customer_email || session.customer_details?.email;
       const packageAmount = session.amount_total || 0;
       const packageId = session.metadata?.packageId;
+      const affiliateCode = session.metadata?.affiliateCode || "rentapog";
+      
+      // Determine which domain this payment came from
+      const baseDomain = session.success_url?.includes('airizzos.com') ? 'airizzos.com' : 'rentapog.com';
+      const backendUrl = baseDomain === 'airizzos.com' ? `https://${baseDomain}/backend` : 'https://backend.rentapog.com';
       
       if (!customerEmail) {
         console.log("[Auto-Login] No customer email in session");
@@ -915,7 +920,7 @@ export async function registerRoutes(
 
       // Set the user cookie for cross-subdomain auth
       res.cookie("user", JSON.stringify(userForCookie), {
-        domain: ".rentapog.com",
+        domain: `.${baseDomain}`,
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         httpOnly: false,
@@ -926,7 +931,7 @@ export async function registerRoutes(
       console.log(`[Auto-Login] Successfully logged in ${customerEmail} after package purchase`);
       
       // Redirect to dashboard
-      return res.redirect("https://backend.rentapog.com?payment_success=true&auto_login=true");
+      return res.redirect(`${backendUrl}?payment_success=true&auto_login=true`);
     } catch (error: any) {
       console.error("[Auto-Login] Error:", error);
       return res.redirect(`https://backend.rentapog.com?error=auto_login_failed`);
