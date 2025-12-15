@@ -333,34 +333,34 @@ export async function registerRoutes(
           to: email,
           subject: `Welcome to ${siteBranding.name}`,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e40af;">Thanks for Joining, ${name}!</h2>
-            <p style="font-size: 16px; color: #333;">You're on the list! We'll keep you updated with the latest opportunities.</p>
+            <h2 style="color: #1e40af;">Welcome, ${name}</h2>
+            <p style="font-size: 16px; color: #333;">Thank you for subscribing. We're excited to have you on board.</p>
             
-            <div style="background: #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <p style="margin: 0 0 10px 0; color: white; font-weight: bold; font-size: 18px;">Ready to Get Started?</p>
-              <p style="margin: 0 0 15px 0; color: white;">Choose a package and start earning today!</p>
-              <a href="${packagesLink}" style="display: inline-block; background: white; color: #10b981; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">View Packages</a>
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+              <p style="margin: 0 0 15px 0; color: #1e40af; font-weight: bold;">Get Started with ${siteBranding.name}</p>
+              <p style="margin: 0 0 15px 0; color: #475569;">View our available packages and choose the option that works best for you.</p>
+              <a href="${packagesLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 16px;">View Available Packages</a>
             </div>
             
-            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
-              <p style="margin: 0; color: #1e40af;"><strong>What's Next?</strong></p>
-              <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569;">
-                <li>Choose your package level (starting at just $20/day)</li>
-                <li>Start your FREE 3-day trial - no payment required!</li>
-                <li>Get your login credentials after purchase</li>
-                <li>Start earning commissions immediately</li>
+            <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Next Steps:</p>
+              <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; line-height: 1.6;">
+                <li>Review the package options available</li>
+                <li>New members receive a 3-day trial period</li>
+                <li>Login credentials will be sent after package selection</li>
+                <li>Access your dashboard to manage your account</li>
               </ul>
             </div>
             
-            <p style="color: #666; text-align: center; margin-top: 30px;">
-              Questions? We're here to help!
+            <p style="color: #666; text-align: center; margin-top: 30px; font-size: 14px;">
+              If you have questions, please contact our support team.
             </p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-              <p>${siteBranding.name} - Your Path to Daily Income</p>
+              <p>${siteBranding.name}</p>
             </div>
           </div>`,
-          text: `Thanks for Joining, ${name}!\n\nYou're on the list! We'll keep you updated with the latest opportunities.\n\nReady to Get Started?\nChoose a package and start earning today!\n\nView Packages: ${packagesLink}\n\nWhat's Next?\n- Choose your package level (starting at just $20/day)\n- Start your FREE 3-day trial - no payment required!\n- Get your login credentials after purchase\n- Start earning commissions immediately\n\nQuestions? We're here to help!\n\n${siteBranding.name} - Your Path to Daily Income`,
+          text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${siteBranding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${siteBranding.name}`,
         });
         
         if (emailResult.success) {
