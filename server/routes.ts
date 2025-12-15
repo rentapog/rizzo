@@ -682,12 +682,68 @@ export async function registerRoutes(
       }
 
       // Find user by email
-      const user = await storage.getUserByEmail(customerEmail);
+      let user = await storage.getUserByEmail(customerEmail);
       
       if (!user) {
-        // User doesn't exist yet - redirect to login with message
-        console.log(`[Auto-Login] No user found for email: ${customerEmail}`);
-        return res.redirect(`https://backend.rentapog.com?payment_success=true&package=${packageId}&email=${encodeURIComponent(customerEmail)}`);
+        // User doesn't exist yet - CREATE ACCOUNT NOW
+        console.log(`[Auto-Login] Creating new account for: ${customerEmail}`);
+        
+        // Get affiliate code from session metadata
+        const affiliateCode = session.metadata?.affiliateCode || "rentapog";
+        
+        // Generate random password
+        const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).toUpperCase().slice(-4);
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        
+        // Generate unique referral code
+        const baseCode = customerEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+        let referralCode = baseCode;
+        let counter = 1;
+        while (await storage.getUserByReferralCode(referralCode)) {
+          referralCode = `${baseCode}${counter}`;
+          counter++;
+        }
+        
+        // Create the user account
+        user = await storage.createUser({
+          email: customerEmail,
+          name: customerEmail.split('@')[0],
+          password: hashedPassword,
+          referralCode,
+          affiliateLink: affiliateCode,
+          isActive: true,
+          packagePurchased: packageAmount,
+        });
+        
+        console.log(`✓ [Auto-Login] Account created for ${customerEmail} | Code: ${referralCode}`);
+        
+        // Send welcome email with login credentials
+        const siteBranding = getSiteBranding();
+        await sendEmail({
+          to: customerEmail,
+          subject: `🎉 Welcome to ${siteBranding.name} - Your Login Credentials`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #2563eb;">Welcome to ${siteBranding.name}!</h2>
+              <p>Your account has been created. Here are your login credentials:</p>
+              
+              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${customerEmail}</p>
+                <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: white; padding: 2px 8px; border-radius: 4px;">${randomPassword}</code></p>
+                <p style="margin: 5px 0;"><strong>Referral Code:</strong> ${referralCode}</p>
+              </div>
+
+              <p style="text-align: center; margin-top: 30px;">
+                <a href="https://${siteBranding.domain}/backend" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Login to Your Dashboard</a>
+              </p>
+              
+              <p style="color: #64748b; font-size: 14px; margin-top: 30px;">Your free trial has started! You have 3 days OR until you get 3 referrals (whichever comes first) before daily billing begins.</p>
+            </div>
+          `,
+          text: `Welcome to ${siteBranding.name}!\n\nYour Login Credentials:\nEmail: ${customerEmail}\nPassword: ${randomPassword}\nReferral Code: ${referralCode}\n\nLogin at: https://${siteBranding.domain}/backend`
+        });
+        
+        console.log(`✓ [Auto-Login] Login credentials sent to ${customerEmail}`);
       }
 
       // Update user's packagePurchased if not already set or if higher package
