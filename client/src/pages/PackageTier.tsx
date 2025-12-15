@@ -310,6 +310,7 @@ export default function PackageTier({ tierPrice }: PackageTierProps) {
         body: JSON.stringify({
           packageId: pkg.id,
           affiliateCode,
+          hostname: window.location.hostname,
         }),
       });
       

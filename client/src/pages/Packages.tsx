@@ -259,6 +259,7 @@ export default function Packages() {
         body: JSON.stringify({
           packageId: pkg.id,
           affiliateCode,
+          hostname: window.location.hostname,
         }),
       });
       

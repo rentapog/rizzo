@@ -3909,7 +3909,7 @@ export async function registerRoutes(
       }
 
       // Get domain-specific Stripe config (test keys for airizzos.com, production for rentapog.com)
-      const hostname = req.get('host') || '';
+      const hostname = req.body.hostname || req.get('host') || '';
       const stripeConfig = getStripeConfig(hostname);
       
       if (!stripeConfig.secretKey) {
