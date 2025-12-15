@@ -31,6 +31,14 @@ app.use((req, res, next) => {
     'https://packages.airizzos.com'
   ];
   const origin = req.headers.origin;
+  
+  // Debug logging
+  if (req.path.includes('/api/packages/checkout')) {
+    console.log('[CORS] Request from origin:', origin);
+    console.log('[CORS] Method:', req.method);
+    console.log('[CORS] Is allowed?', origin && allowedOrigins.includes(origin));
+  }
+  
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
