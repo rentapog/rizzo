@@ -25,7 +25,23 @@ function getPlainTextFooter(email: string): string {
   return `\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: https://rentapog.com/unsubscribe?email=${encodeURIComponent(email)}\nYou're receiving this because you signed up at rentapog.com`;
 }
 
-const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: string, email?: string) => { subject: string; html: string; text: string } } = {
+const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: string, email?: string, paymentLink?: string) => { subject: string; html: string; text: string } } = {
+    paymentTest: (code, subdomain, email = '', paymentLink = 'https://buy.stripe.com/test_fZu28q2QKeD7fYcghygA800') => {
+      // You can pass a custom test payment link, or use the default test link
+      return {
+        subject: "Test Your Payment Flow (Stripe Test Mode)",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #1e40af;">Test Payment Link</h2>
+          <p>Click the button below to test your payment flow in Stripe's test mode. No real money will be charged.</p>
+          <p style="background: #f0f9ff; padding: 15px; border-radius: 8px; text-align: center;">
+            <a href="${paymentLink}" style="color: #fff; background: #2563eb; font-size: 18px; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block;">Pay with Stripe (Test Mode)</a>
+          </p>
+          <p style="margin-top: 20px; color: #64748b; font-size: 14px;">Use Stripe's test card number: <strong>4242 4242 4242 4242</strong> with any future expiry and CVC.</p>
+          ${getEmailFooter(email)}
+        </div>`,
+        text: `Test Payment Link\n\nTest your payment flow in Stripe's test mode. No real money will be charged.\n\n${paymentLink}\n\nUse Stripe's test card number: 4242 4242 4242 4242 with any future expiry and CVC.${getPlainTextFooter(email)}`
+      };
+    },
   day0: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
     const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
