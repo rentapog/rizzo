@@ -1,16 +1,14 @@
-  // ADMIN: Delete all users and email leads (for testing/reset only)
-  async deleteAllUsersAndLeads() {
-    // Delete all users
-    await db.delete(users);
-    // Delete all email leads
-    await db.delete(emailLeads);
-  },
+// Force cache refresh: Render build bust (2025-12-16)
 import { db } from "./db";
 import { users, emailLeads, domainRentals, affiliateSales, emailSchedules, adminDomains, teamMembers, deploymentSettings, emailCampaigns, domainNotifications, adminSessions, rentalContracts, rentalCharges, loginTokens, userTierSales, adminLoginAttempts, brandingSubscriptions, purchasedDomains, websiteProjects, userSiteProjects } from "@shared/schema";
 import { eq, and, isNotNull, ne, lt, isNull, sql } from "drizzle-orm";
 import type { User, EmailLead, DomainRental, AffiliateSale, EmailSchedule, AdminDomain, RentalContract, RentalCharge, BrandingSubscription, WebsiteProject, UserSiteProject } from "@shared/schema";
 
 export interface IStorage {
+  /**
+   * Delete all users and all email leads (for admin testing/reset only)
+   */
+  deleteAllUsersAndLeads(): Promise<void>;
   createUser(data: any): Promise<any>;
   getUserByEmail(email: string): Promise<any>;
   getUserById(id: string): Promise<any>;
@@ -156,6 +154,12 @@ export interface IStorage {
 }
 
 export const storage: IStorage = {
+  async deleteAllUsersAndLeads() {
+    // Delete all email leads first (to avoid FK constraints)
+    await db.delete(emailLeads);
+    // Delete all users (except admin if needed)
+    await db.delete(users);
+  },
   async createUser(data) {
     const result = await db.insert(users).values(data).returning();
     return result[0];
