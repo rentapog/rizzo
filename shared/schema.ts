@@ -52,8 +52,8 @@ export const users = pgTable("users", {
   emailNotificationsEnabled: boolean("email_notifications_enabled").notNull().default(true), // Whether user wants domain listing emails
   subdomain: text("subdomain").unique(), // User's registered subdomain (e.g., "joey" for joey.rentapog.com)
   // Trial and daily billing fields
-  trialStartedAt: timestamp("trial_started_at"), // When 7-day trial began (after paying join fee)
-  trialEndsAt: timestamp("trial_ends_at"), // When trial is scheduled to end (7 days from start)
+  trialStartedAt: timestamp("trial_started_at"), // When 3-day trial began (after paying join fee)
+  trialEndsAt: timestamp("trial_ends_at"), // When trial is scheduled to end (3 days from start)
   trialStatus: text("trial_status"), // 'active', 'ended', null (not started)
   trialEndReason: text("trial_end_reason"), // 'time_expired', 'referrals_met', null
   joinFeePaidAt: timestamp("join_fee_paid_at"), // When user paid the join fee

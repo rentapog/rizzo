@@ -1,3 +1,10 @@
+  // ADMIN: Delete all users and email leads (for testing/reset only)
+  async deleteAllUsersAndLeads() {
+    // Delete all users
+    await db.delete(users);
+    // Delete all email leads
+    await db.delete(emailLeads);
+  },
 import { db } from "./db";
 import { users, emailLeads, domainRentals, affiliateSales, emailSchedules, adminDomains, teamMembers, deploymentSettings, emailCampaigns, domainNotifications, adminSessions, rentalContracts, rentalCharges, loginTokens, userTierSales, adminLoginAttempts, brandingSubscriptions, purchasedDomains, websiteProjects, userSiteProjects } from "@shared/schema";
 import { eq, and, isNotNull, ne, lt, isNull, sql } from "drizzle-orm";
@@ -767,7 +774,7 @@ export const storage: IStorage = {
   // Trial and daily billing methods
   async startUserTrial(userId: string, packageAmount: number) {
     const now = new Date();
-    const trialEndsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+    const trialEndsAt = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
     
     // Get user's current referral count to track referrals gained during trial
     const user = await this.getUserById(userId);

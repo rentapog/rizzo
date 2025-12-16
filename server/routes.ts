@@ -1,3 +1,38 @@
+// ADMIN: Delete all users and email leads (for testing/reset only)
+// POST /api/admin/clear-users
+// Body: { adminSecret: string }
+// Protected by ADMIN_PIN
+export function registerAdminClearUsersRoute(app: any) {
+  app.post("/api/admin/clear-users", async (req: Request, res: Response) => {
+    if (req.body.adminSecret !== process.env.ADMIN_PIN) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    try {
+      // Delete all users and email leads
+      await storage.deleteAllUsersAndLeads();
+      res.json({ success: true, message: "All users and email leads deleted." });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+}
+// TEMPORARY: Admin-only route to clear all email leads (for testing only)
+// This should be registered after 'app' is defined in index.ts, but for now, export as a function
+import type { Request, Response } from "express";
+export function registerAdminClearLeadsRoute(app: any, db: any, emailLeads: any) {
+  app.post("/api/admin/clear-leads", async (req: Request, res: Response) => {
+    // Simple admin check (replace with real auth in production)
+    if (req.body.adminSecret !== process.env.ADMIN_PIN) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    try {
+      await db.delete(emailLeads);
+      res.json({ success: true, message: "All email leads deleted." });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+}
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
@@ -573,7 +608,7 @@ export async function registerRoutes(
         
         // Generate a secure session token
         const sessionToken = generateAdminSessionToken();
-        const expiresAt = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)); // 7 days
+        const expiresAt = new Date(Date.now() + (3 * 24 * 60 * 60 * 1000)); // 3 days
         
         // Store session in DATABASE (persists across restarts)
         await storage.createAdminSession(sessionToken, adminEmail, expiresAt);
@@ -773,11 +808,11 @@ export async function registerRoutes(
         console.log(`[Auto-Login] Updated packagePurchased for ${customerEmail}: $${(packageAmount / 100).toFixed(2)}`);
       }
 
-      // START TRIAL: User paid join fee, start 7-day trial (or until 3 referrals)
+      // START TRIAL: User paid join fee, start 3-day trial (or until 3 referrals)
       // Only start trial if not already started
       if (!user.trialStartedAt && packageAmount > 0) {
         await storage.startUserTrial(user.id, packageAmount);
-        console.log(`[Auto-Login] Started 7-day trial for ${customerEmail} after paying $${(packageAmount / 100).toFixed(2)} join fee`);
+        console.log(`[Auto-Login] Started 3-day trial for ${customerEmail} after paying $${(packageAmount / 100).toFixed(2)} join fee`);
       }
 
       // FIRST 3 LEADS SYSTEM: Assign next 3 unassigned email leads to this buyer
@@ -835,26 +870,23 @@ export async function registerRoutes(
         // Don't fail the whole process if lead assignment fails
       }
 
-      // Record affiliate sale for the referrer
+      // Record affiliate sale for the referrer ONLY if referrer has paid (packagePurchased > 0)
       if (user.affiliateLink && packageAmount > 0) {
         try {
           // Find the referrer by their referral code
           const referrer = await storage.getUserByReferralCode(user.affiliateLink);
-          
-          if (referrer) {
+          // Only proceed if referrer has actually paid
+          if (referrer && referrer.packagePurchased && referrer.packagePurchased > 0) {
             // Get how many sales this referrer has made globally (for saleNumber tracking)
             const existingSales = await storage.getAffiliateSales(referrer.id);
             const saleNumber = existingSales.length + 1;
-            
             // Get per-tier sales count for this specific package amount
             const tierSalesRecord = await storage.getUserTierSales(referrer.id, packageAmount);
             const tierSaleNumber = (tierSalesRecord?.salesCount || 0) + 1;
-            
             // Pass-up logic: 2nd sale AT EACH TIER goes to admin, all others go to referrer
             // Also pass up if buyer's level exceeds seller's level
             let passedUpTo: string | null = null;
             let passedUpReason: string | null = null;
-            
             if (tierSaleNumber === 2 && !referrer.isSubAdmin) {
               // Sub-admins keep their 2nd sale; regular users pass it up
               passedUpTo = "admin";
@@ -864,7 +896,6 @@ export async function registerRoutes(
               passedUpTo = "admin";
               passedUpReason = "under_leveled";
             }
-            
             // Create the affiliate sale record with tier info
             await storage.createAffiliateSale({
               sellerId: referrer.id,
@@ -878,13 +909,10 @@ export async function registerRoutes(
               passedUpReason,
               tierSaleNumber,
             });
-            
             // Increment referrer's global sales count
             await storage.incrementSalesCount(referrer.id);
-            
             // Increment referrer's tier-specific sales count
             await storage.incrementTierSalesCount(referrer.id, packageAmount);
-            
             // Credit referral balance if NOT passed up, otherwise credit admin
             if (!passedUpTo) {
               const newBalance = (referrer.referralBalance || 0) + packageAmount;
@@ -902,10 +930,9 @@ export async function registerRoutes(
                 console.log(`[Auto-Login] Warning: Admin user with code ${adminCode} not found for pass-up credit`);
               }
             }
-            
             console.log(`[Auto-Login] Recorded affiliate sale #${saleNumber} (tier sale #${tierSaleNumber}) for referrer ${referrer.referralCode} | Buyer: ${customerEmail} | Amount: $${(packageAmount / 100).toFixed(2)} | Passed up: ${passedUpTo || 'no'}`);
           } else {
-            console.log(`[Auto-Login] No referrer found for code: ${user.affiliateLink}`);
+            console.log(`[Auto-Login] Referrer not eligible (not paid) or not found for code: ${user.affiliateLink}`);
           }
         } catch (saleErr) {
           console.error("[Auto-Login] Error recording affiliate sale:", saleErr);
@@ -930,7 +957,7 @@ export async function registerRoutes(
       res.cookie("user", JSON.stringify(userForCookie), {
         domain: `.${baseDomain}`,
         path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
         httpOnly: false,
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
@@ -2187,7 +2214,7 @@ export async function registerRoutes(
       res.cookie("user", JSON.stringify(userResponse), {
         domain: ".rentapog.com",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
         httpOnly: false,
         sameSite: "lax",
       });

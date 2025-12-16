@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
-import { registerRoutes } from "./routes";
+import { registerRoutes, registerAdminClearLeadsRoute, registerAdminClearUsersRoute } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startEmailWorker } from "./emailWorker";
@@ -9,6 +9,12 @@ import { storage } from "./storage";
 import { notificationService } from "./websocket";
 
 const app = express();
+// Register temporary admin clear leads route
+import { db } from "./db";
+import { emailLeads } from "@shared/schema";
+registerAdminClearLeadsRoute(app, db, emailLeads);
+// Register admin clear users route (delete all users and email leads)
+registerAdminClearUsersRoute(app);
 
 // CORS middleware for cross-origin requests from packages.rentapog.com
 app.use((req, res, next) => {

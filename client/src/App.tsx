@@ -71,8 +71,8 @@ function Router() {
     );
   }
 
-  // If on backoffice576.rentapog.com, show admin backoffice
-  if (hostname.includes("backoffice576.rentapog.com")) {
+  // If on backoffice576.rentapog.com or backoffice.rentapog.com, show admin backoffice
+  if (hostname.includes("backoffice576.rentapog.com") || hostname.includes("backoffice.rentapog.com")) {
     return (
       <Switch>
         <Route path="/privacy">{() => <Privacy />}</Route>

@@ -54,7 +54,7 @@ The core revenue model - understanding this is essential for any payment/sales c
 - Frontend display: `client/src/pages/UserBackend.tsx` (sales dashboard)
 
 ### Trial & Billing System
-1. **Trial period**: 7 days after paying join fee (tracked via `trialStartedAt`, `trialEndsAt`)
+1. **Trial period**: 3 days after paying join fee (tracked via `trialStartedAt`, `trialEndsAt`)
 2. **Trial end conditions**: Time expires OR user gets 2 qualified referrals
 3. **Daily billing**: After trial, `billingWorker.ts` charges `dailyChargeAmount` (based on package tier)
 4. **Balance priority**: Uses `referralBalance` first (from commissions), then `accountBalance`

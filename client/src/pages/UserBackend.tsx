@@ -43,51 +43,65 @@ export default function UserBackend() {
       let userData = localStorage.getItem("user");
       
       // If not in localStorage, try to get from cookie
-      if (!userData) {
-        const cookieValue = document.cookie
-          .split("; ")
-          .find(row => row.startsWith("user="))
-          ?.split("=")[1];
-        if (cookieValue) {
-          try {
-            userData = decodeURIComponent(cookieValue);
-            // Save to localStorage for future use
-            localStorage.setItem("user", userData);
-          } catch {
-            // Cookie parsing failed
+      useEffect(() => {
+        const initializeUser = async () => {
+          // Check for payment success from URL parameters
+          const urlParams = new URLSearchParams(window.location.search);
+          const paymentSuccess = urlParams.get("payment_success");
+          const packageId = urlParams.get("package");
+          const autoLogin = urlParams.get("auto_login");
+
+          if (paymentSuccess === "true") {
+            setShowPaymentSuccess(true);
+            setPurchasedPackage(packageId);
           }
-        }
-      }
-      
-      // If auto_login is set or no userData, try to fetch from server
-      if (autoLogin === "true" || !userData) {
-        try {
-          console.log("[UserBackend] Attempting auto-login via /api/auth/current...");
-          const res = await fetch("/api/auth/current", { credentials: "include" });
-          if (res.ok) {
-            const serverUser = await res.json();
-            console.log("[UserBackend] Auto-login successful:", serverUser.email);
-            userData = JSON.stringify(serverUser);
-            localStorage.setItem("user", userData);
+
+          // Always check for user cookie if payment just succeeded (auto-login)
+          let userData = null;
+          if (paymentSuccess === "true" || autoLogin === "true") {
+            const cookieValue = document.cookie
+              .split("; ")
+              .find(row => row.startsWith("user="))
+              ?.split("=")[1];
+            if (cookieValue) {
+              try {
+                userData = decodeURIComponent(cookieValue);
+                localStorage.setItem("user", userData);
+              } catch {
+                // Cookie parsing failed
+              }
+            }
+          } else {
+            // Otherwise, try localStorage first, then cookie
+            userData = localStorage.getItem("user");
+            if (!userData) {
+              const cookieValue = document.cookie
+                .split("; ")
+                .find(row => row.startsWith("user="))
+                ?.split("=")[1];
+              if (cookieValue) {
+                try {
+                  userData = decodeURIComponent(cookieValue);
+                  localStorage.setItem("user", userData);
+                } catch {
+                  // Cookie parsing failed
+                }
+              }
+            }
           }
-        } catch (err) {
-          console.error("[UserBackend] Auto-login failed:", err);
-        }
-      }
-      
-      // Clean up URL parameters
-      if (paymentSuccess || autoLogin) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      
-      if (userData) {
-        try {
-          const parsed = JSON.parse(userData);
-          setUser(parsed);
-          fetchUserDomain(parsed.id);
-          fetchSalesData(parsed.id);
-          fetchReferralsData(parsed.id);
-          fetchUserSubdomain(parsed.id);
+
+          if (userData) {
+            try {
+              setUser(JSON.parse(userData));
+            } catch {
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
+        };
+        initializeUser();
+      }, []);
           const stripeStatus = localStorage.getItem("stripeConnected");
           setStripeConnected(stripeStatus === "true");
         } catch {
