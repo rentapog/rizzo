@@ -25,6 +25,14 @@ interface Package {
   features: string[];
 }
 
+const packageLinks: { [price: number]: string } = {
+  20: "https://buy.stripe.com/test_fZu28q2QKeD7fYcghygA800",
+  49: "https://buy.stripe.com/test_3cIdR8770fHb8vK6GYgA802",
+  99: "https://buy.stripe.com/test_9B63cu1MGdz313i4yQgA805",
+  149: "https://buy.stripe.com/test_dRmfZg9f80Mh6nCaXegA806",
+  249: "https://buy.stripe.com/test_fZu4gy770eD76nCc1igA807",
+};
+
 const packages: Package[] = [
   {
     id: 1,
@@ -254,30 +262,13 @@ export default function Packages() {
     }
   }, [affiliateCode]);
 
-  const handleBuyPackage = async (pkg: Package) => {
-    setLoadingPackageId(pkg.id);
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/packages/checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageId: pkg.id,
-          affiliateCode,
-          hostname: window.location.hostname,
-        }),
-      });
-      
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Unable to create checkout session. Please try again.");
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setLoadingPackageId(null);
+
+  const handleBuyPackage = (pkg: Package) => {
+    const link = packageLinks[pkg.price];
+    if (link) {
+      window.open(link, "_blank");
+    } else {
+      alert("No payment link available for this package.");
     }
   };
 
@@ -385,21 +376,22 @@ export default function Packages() {
               </ul>
               <button
                 onClick={() => handleBuyPackage(pkg)}
-                disabled={loadingPackageId === pkg.id}
                 style={{
-                  background: loadingPackageId === pkg.id ? "#6680c0" : "#0033a0",
+                  background: packageLinks[pkg.price] ? "#0033a0" : "#6680c0",
                   color: "#fff",
                   border: "none",
                   borderRadius: "6px",
                   padding: "12px 28px",
                   fontSize: "1.1em",
                   fontWeight: "bold",
-                  cursor: loadingPackageId === pkg.id ? "wait" : "pointer",
+                  cursor: packageLinks[pkg.price] ? "pointer" : "not-allowed",
                   display: "inline-block",
                   marginTop: "10px",
+                  opacity: packageLinks[pkg.price] ? 1 : 0.6,
                 }}
+                disabled={!packageLinks[pkg.price]}
               >
-                {loadingPackageId === pkg.id ? "Loading..." : "Start FREE Trial"}
+                {packageLinks[pkg.price] ? "Pay with Stripe (Test)" : "Not Available"}
               </button>
             </div>
           ))}
