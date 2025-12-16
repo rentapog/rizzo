@@ -1,3 +1,8 @@
+# Ignore environment and secrets files
+.env
+.env.production
+copy-secrets.sh
+set-env.sh
 node_modules
 dist
 .DS_Store
