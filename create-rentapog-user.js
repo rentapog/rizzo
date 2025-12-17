@@ -1,25 +1,36 @@
+
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+dotenv.config();
 const { Client } = pg;
 
 const client = new Client({
-  connectionString: "postgresql://neondb_owner:npg_BwyZxYlR87NP@ep-autumn-glitter-adml5yko-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  connectionString: process.env.DATABASE_URL
 });
 
 await client.connect();
 
-// Check if rentapog user already exists
-const existing = await client.query("SELECT id FROM users WHERE referral_code = 'rentapog'");
+const adminEmail = process.env.ADMIN_EMAIL || 'admin@rentapog.com';
+const adminPassword = process.env.ADMIN_PASSWORD || 'rentapog123';
+const adminUsername = process.env.ADMIN_USERNAME || 'rentapog';
+
+// Check if admin user already exists
+const existing = await client.query("SELECT id FROM users WHERE email = $1", [adminEmail]);
+const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
 if (existing.rows.length > 0) {
-  console.log("✓ User 'rentapog' already exists with ID:", existing.rows[0].id);
+  // Update password and referral_code if needed
+  await client.query(
+    `UPDATE users SET password = $1, referral_code = 'rentapog', is_active = true, is_sub_admin = true WHERE email = $2`,
+    [hashedPassword, adminEmail]
+  );
+  console.log(`✓ Updated admin user (${adminEmail}) with new password and referral_code 'rentapog'.`);
   await client.end();
   process.exit(0);
 }
 
-// Create default password hash
-const hashedPassword = await bcrypt.hash('rentapog123', 10);
-
-// Insert the rentapog user as a default affiliate account
+// Insert the admin user as a default affiliate account
 const result = await client.query(`
   INSERT INTO users (
     email, 
@@ -30,21 +41,21 @@ const result = await client.query(`
     is_sub_admin,
     referred_by
   ) VALUES (
-    'admin@airizzos.com',
-    'RentAPog Default',
     $1,
+    $2,
+    $3,
     'rentapog',
     true,
     true,
     null
   ) RETURNING id, email, referral_code
-`, [hashedPassword]);
+`, [adminEmail, adminUsername, hashedPassword]);
 
-console.log("✓ Created rentapog affiliate account:");
+console.log("✓ Created admin account:");
 console.log(result.rows[0]);
 console.log("\nLogin credentials:");
-console.log("  Email: admin@airizzos.com");
-console.log("  Password: rentapog123");
+console.log(`  Email: ${adminEmail}`);
+console.log(`  Password: ${adminPassword}`);
 console.log("  Referral Code: rentapog");
 
 await client.end();
