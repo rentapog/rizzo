@@ -30,7 +30,7 @@ export function BrandedFooter({ theme, brandName, slug }: BrandedFooterProps) {
                 </a>
               </li>
               <li>
-                <a href="https://rentapog.com/packages" className="hover:text-white transition">
+                <a href="https://packages.rentapog.com" className="hover:text-white transition">
                   Pricing
                 </a>
               </li>

@@ -30,7 +30,7 @@ export default function AdminPackages() {
   const { toast } = useToast();
 
   const getPackageLink = (price: number) => {
-    return `https://rentapog.com/packages/${price}?aff=rentapog`;
+    return `https://packages.rentapog.com/?aff=rentapog`;
   };
 
   const copyLink = async (pkg: Package) => {

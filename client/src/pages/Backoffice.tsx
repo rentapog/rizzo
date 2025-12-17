@@ -4604,7 +4604,7 @@ export default function Backoffice() {
             }}
             onClick={() => {
               const affLink = localStorage.getItem("affiliateLink") || "rentapog";
-              window.location.href = `https://rentapog.com/packages?aff=${affLink}`;
+              window.location.href = `https://packages.rentapog.com/?aff=${affLink}`;
             }}
           >
             <h2 style={{
