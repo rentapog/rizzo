@@ -9,20 +9,20 @@ function formatSubdomainUrl(domainName: string): string {
 
 // Email footer with unsubscribe link and physical address (required by CAN-SPAM)
 function getEmailFooter(email: string): string {
-  const unsubscribeUrl = `https://rentapog.com/unsubscribe?email=${encodeURIComponent(email)}`;
+  const unsubscribeUrl = `https://packages.rentapog.com/unsubscribe?email=${encodeURIComponent(email)}`;
   return `
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
       <p>RentAPog - Daily Domain Rental Platform</p>
       <p style="margin-top: 10px;">
         <a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe from these emails</a>
       </p>
-      <p style="margin-top: 5px;">You're receiving this because you signed up at rentapog.com</p>
+      <p style="margin-top: 5px;">You're receiving this because you signed up at packages.rentapog.com</p>
     </div>
   `;
 }
 
 function getPlainTextFooter(email: string): string {
-  return `\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: https://rentapog.com/unsubscribe?email=${encodeURIComponent(email)}\nYou're receiving this because you signed up at rentapog.com`;
+  return `\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: https://packages.rentapog.com/unsubscribe?email=${encodeURIComponent(email)}\nYou're receiving this because you signed up at packages.rentapog.com`;
 }
 
 const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: string, email?: string, paymentLink?: string) => { subject: string; html: string; text: string } } = {
