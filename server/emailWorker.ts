@@ -102,8 +102,8 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
   },
   day6: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `rentapog.com/?aff=${code}`;
+    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
+    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
     return {
       subject: "Your Earnings Dashboard Is Ready",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -120,8 +120,8 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
   },
   day8: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `rentapog.com/?aff=${code}`;
+    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
+    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
     return {
       subject: "Don't Leave Money on the Table",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -156,8 +156,8 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
   },
   day14: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `rentapog.com/?aff=${code}`;
+    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
+    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
     return {
       subject: "Level Up Your Earnings",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
