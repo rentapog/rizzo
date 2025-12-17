@@ -44,8 +44,8 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
     },
   day0: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `rentapog.com/?aff=${code}`;
+    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
+    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
     return {
       subject: "Your Unique Affiliate Link Inside",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -62,8 +62,8 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
   },
   day2: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `rentapog.com/?aff=${code}`;
+    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
+    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
     return {
       subject: "3 Ways to Earn This Week",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -84,8 +84,8 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
   },
   day4: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `rentapog.com/?aff=${code}`;
+    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
+    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
     return {
       subject: "Members Earning $200+ Per Week",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -138,8 +138,8 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
   },
   day10: (code, subdomain, email = '') => {
     const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `rentapog.com/?aff=${code}`;
+    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
+    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
     return {
       subject: "Time to Scale Your Earnings",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
