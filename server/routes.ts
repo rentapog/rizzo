@@ -364,11 +364,11 @@ export async function registerRoutes(
 
       // Send simple welcome email (no login credentials)
       try {
-        const siteBranding = getSiteBranding();
-        // Send to packages page on main domain with affiliate link
-        const packagesLink = referrerCode 
-          ? `https://${siteBranding.domain}/packages?aff=${referrerCode}`
-          : `https://${siteBranding.domain}/packages`;
+
+        // Always use packages.rentapog.com for affiliate links
+        const packagesLink = referrerCode
+          ? `https://packages.rentapog.com/?aff=${referrerCode}`
+          : `https://packages.rentapog.com`;
 
         const emailResult = await sendEmail({
           to: email,
