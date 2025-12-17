@@ -7,7 +7,7 @@ const emailTemplates = {
     html: `
       <h2>Welcome to RentAPog!</h2>
       <p>Your affiliate link is ready to start earning commissions:</p>
-      <p><strong><a href="https://rentapog.com/register-domain?aff=${affiliateCode}">https://rentapog.com/register-domain?aff=${affiliateCode}</a></strong></p>
+      <p><strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <p>Anyone who signs up through this link becomes your referral. You'll get 100% of their 1st and 3rd+ sales!</p>
     `,
   }),
@@ -15,7 +15,7 @@ const emailTemplates = {
     subject: "3 Ways to Earn This Week 💰",
     html: `
       <h2>3 Ways to Earn This Week</h2>
-      <p>Share your link: <strong><a href="https://rentapog.com/register-domain?aff=${affiliateCode}">https://rentapog.com/register-domain?aff=${affiliateCode}</a></strong></p>
+      <p>Share your link: <strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <ol>
         <li>Share with friends and get 100% on their 1st sale</li>
         <li>Post in communities and watch referrals roll in</li>
@@ -28,7 +28,7 @@ const emailTemplates = {
     html: `
       <h2>Members Earning $200+ Per Week</h2>
       <p>Top affiliates are crushing it! Get your referral link out there:</p>
-      <p><strong><a href="https://rentapog.com/register-domain?aff=${affiliateCode}">https://rentapog.com/register-domain?aff=${affiliateCode}</a></strong></p>
+      <p><strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <p>Each referral you send can generate daily commissions for you!</p>
     `,
   }),
@@ -37,7 +37,7 @@ const emailTemplates = {
     html: `
       <h2>Your Earnings Dashboard Is Ready</h2>
       <p>Time to start sharing your link and earning! Your link:</p>
-      <p><strong><a href="https://rentapog.com/register-domain?aff=${affiliateCode}">https://rentapog.com/register-domain?aff=${affiliateCode}</a></strong></p>
+      <p><strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <p>Each signup gets you closer to passive daily income.</p>
     `,
   }),
@@ -46,7 +46,7 @@ const emailTemplates = {
     html: `
       <h2>Don't Leave Money on the Table</h2>
       <p>Every day you're not sharing your link is money you're missing out on.</p>
-      <p>Affiliate link: <strong><a href="https://rentapog.com/register-domain?aff=${affiliateCode}">https://rentapog.com/register-domain?aff=${affiliateCode}</a></strong></p>
+      <p>Affiliate link: <strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <p>Start sharing now!</p>
     `,
   }),
@@ -55,7 +55,7 @@ const emailTemplates = {
     html: `
       <h2>Time to Scale Your Earnings</h2>
       <p>Don't miss out on daily commissions - share your link now!</p>
-      <p><strong><a href="https://rentapog.com/register-domain?aff=${affiliateCode}">https://rentapog.com/register-domain?aff=${affiliateCode}</a></strong></p>
+      <p><strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <p>Premium packages unlock even more earning potential.</p>
     `,
   }),
@@ -64,7 +64,7 @@ const emailTemplates = {
     html: `
       <h2>Level Up Your Earnings</h2>
       <p>Ready for more? Premium features unlock unlimited referrals.</p>
-      <p>Your link: <strong><a href="https://rentapog.com/register-domain?aff=${affiliateCode}">https://rentapog.com/register-domain?aff=${affiliateCode}</a></strong></p>
+      <p>Your link: <strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <p>Keep growing your affiliate network!</p>
     `,
   }),
