@@ -2,6 +2,15 @@ import nodemailer from "nodemailer";
 
 // Email templates for the 7-day sequence
 const emailTemplates = {
+    dayNew: (affiliateCode: string) => ({
+      subject: "Your New Affiliate Link (Test)",
+      html: `
+        <h2>Welcome to RentAPog (New Template)!</h2>
+        <p>This is a new test template to confirm link updates.</p>
+        <p><strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
+        <p>Share this link to earn commissions!</p>
+      `,
+    }),
   day0: (affiliateCode: string) => ({
     subject: "Your Unique Affiliate Link Inside 🚀",
     html: `
