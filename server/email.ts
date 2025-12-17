@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 // Email templates for the 7-day sequence
 const emailTemplates = {
@@ -79,36 +79,24 @@ const emailTemplates = {
   }),
 };
 
-export async function sendAffiliateEmail(
   toEmail: string,
   affiliateCode: string,
   emailType: string
 ) {
   try {
-    // Use Gmail SMTP for now - user can connect SendGrid later if they want
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER || "",
-        pass: process.env.GMAIL_PASSWORD || "",
-      },
-    });
-
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const template = emailTemplates[emailType as keyof typeof emailTemplates];
     if (!template) {
       console.error(`Unknown email type: ${emailType}`);
       return false;
     }
-
     const { subject, html } = template(affiliateCode);
-
-    await transporter.sendMail({
-      from: process.env.GMAIL_USER || "noreply@rentapog.com",
+    await resend.emails.send({
+      from: "RentAPog <sales@rentapog.com>",
       to: toEmail,
       subject,
       html,
     });
-
     return true;
   } catch (error) {
     console.error(`Failed to send ${emailType} email:`, error);
