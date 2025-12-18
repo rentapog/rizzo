@@ -1,6 +1,9 @@
+// Load environment variables from .env before anything else
+import dotenv from "dotenv";
+dotenv.config();
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
-import { registerRoutes, registerAdminClearLeadsRoute, registerAdminClearUsersRoute } from "./routes";
+import { registerRoutes, registerAdminClearLeadsRoute, registerAdminClearUsersRoute, registerAWeberOAuthRoutes, registerMailgunEmailRoute } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startEmailWorker } from "./emailWorker";
@@ -9,6 +12,10 @@ import { storage } from "./storage";
 import { notificationService } from "./websocket";
 
 const app = express();
+// Register Mailgun email API route (for frontend to trigger emails)
+registerMailgunEmailRoute(app);
+// Register AWeber OAuth routes
+registerAWeberOAuthRoutes(app);
 // Register temporary admin clear leads route
 import { db } from "./db";
 import { emailLeads } from "@shared/schema";
@@ -201,52 +208,54 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  await registerRoutes(httpServer, app);
-  
-  // Initialize WebSocket notification service
-  notificationService.initialize(httpServer);
-  
-  // Sub-admin account family@rentapog.com is managed manually in the database
-  // No automatic seeding needed
-  
-  // Start the email worker to send scheduled affiliate emails
-  startEmailWorker();
-  
-  // Start the billing worker for trial expiration and daily charges
-  startBillingWorker();
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+// Register main API routes BEFORE static/catch-all middleware
+registerRoutes(httpServer, app);
 
-    res.status(status).json({ message });
-    throw err;
-  });
+// Initialize WebSocket notification service
+notificationService.initialize(httpServer);
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
+// Sub-admin account family@rentapog.com is managed manually in the database
+// No automatic seeding needed
+
+// Start the email worker to send scheduled affiliate emails
+startEmailWorker();
+
+// Start the billing worker for trial expiration and daily charges
+startBillingWorker();
+
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+
+  res.status(status).json({ message });
+  throw err;
+});
+
+// importantly only setup vite in development and after
+// setting up all the other routes so the catch-all route
+// doesn't interfere with the other routes
+if (process.env.NODE_ENV === "production") {
+  serveStatic(app);
+} else {
+  (async () => {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
-  }
+  })();
+}
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
-})();
+// ALWAYS serve the app on the port specified in the environment variable PORT
+// Other ports are firewalled. Default to 5000 if not specified.
+// this serves both the API and the client.
+// It is the only port that is not firewalled.
+const port = parseInt(process.env.PORT || "5000", 10);
+httpServer.listen(
+  {
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  },
+  () => {
+    log(`serving on port ${port}`);
+  },
+);

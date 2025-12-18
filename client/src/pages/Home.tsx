@@ -777,51 +777,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-slate-300 py-12 border-t">
-        <div className="container px-4 md:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="font-semibold text-white mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/features" className="hover:text-white transition">Features</Link></li>
-                <li><Link href="/howitworks" className="hover:text-white transition">How It Works</Link></li>
-                <li><Link href="/packages" className="hover:text-white transition">Pricing</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Community</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/affiliate" className="hover:text-white transition">Become Affiliate</Link></li>
-                <li><Link href="/blog" className="hover:text-white transition">Blog</Link></li>
-                <li><a href="mailto:support@rentapog.com" className="hover:text-white transition">Contact</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition">Terms & Conditions</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition">Disclaimer</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Support</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="mailto:support@rentapog.com" className="hover:text-white transition">Help Center</a></li>
-                <li><a href="mailto:support@rentapog.com" className="hover:text-white transition">FAQ</a></li>
-                <li><a href="mailto:support@rentapog.com" className="hover:text-white transition">Email Support</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-700 pt-8 text-center">
-            <p className="text-sm text-slate-400">
-              © 2025 RentAPog. All rights reserved. | The world's first daily-pay pog rental platform.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

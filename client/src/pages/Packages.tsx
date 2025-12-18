@@ -2,19 +2,8 @@ import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 
 const getApiBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // Use same-origin (relative URL) for airizzos.com to avoid CORS
-    if (hostname.includes('airizzos.com')) {
-      return '';
-    }
-    // Use Render backend for packages subdomain
-    if (hostname.includes('packages.')) {
-      return 'https://rizz-4zvv.onrender.com';
-    }
-  }
-  // Fallback for rentapog.com or local dev
-  return 'https://referral-cascade--rentapog.replit.app';
+  // Always use the main backend for all environments
+  return 'https://backend.rentapog.com';
 };
 
 interface Package {

@@ -1,3 +1,61 @@
+import { sendAffiliateEmailMailgun } from "./email";
+// Public API route to send affiliate email via Mailgun
+export function registerMailgunEmailRoute(app: Express) {
+  app.post("/api/send-affiliate-email", async (req, res) => {
+    const { toEmail, affiliateCode } = req.body;
+    if (!toEmail) return res.status(400).json({ error: "Missing toEmail" });
+    try {
+      const result = await sendAffiliateEmailMailgun({
+        toEmail,
+        affiliateCode: affiliateCode || "rentapog",
+      });
+      if (result && result.id) {
+        return res.json({ success: true, id: result.id });
+      } else {
+        return res.status(500).json({ error: "Failed to send email" });
+      }
+    } catch (err) {
+      return res.status(500).json({ error: String(err) });
+    }
+  });
+}
+// --- AWeber OAuth Integration ---
+import axios from "axios";
+
+export function registerAWeberOAuthRoutes(app: Express) {
+  // Step 1: Redirect user to AWeber OAuth consent
+  app.get("/api/aweber/auth", (req, res) => {
+    const clientId = process.env.AWEBER_CLIENT_ID;
+    const redirectUri = encodeURIComponent(process.env.AWEBER_REDIRECT_URI!);
+    const state = crypto.randomBytes(16).toString("hex");
+    const authUrl = `https://auth.aweber.com/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=account.read+list.read+subscriber.read+subscriber.write&state=${state}`;
+    res.redirect(authUrl);
+  });
+
+  // Step 2: Handle OAuth callback and exchange code for tokens
+  app.get("/api/aweber/callback", async (req, res) => {
+    const code = req.query.code as string;
+    if (!code) return res.status(400).send("Missing code");
+    try {
+      const tokenRes = await axios.post(
+        "https://auth.aweber.com/oauth2/token",
+        new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: process.env.AWEBER_REDIRECT_URI!,
+          client_id: process.env.AWEBER_CLIENT_ID!,
+          client_secret: process.env.AWEBER_CLIENT_SECRET!,
+        }),
+        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+      );
+      // Store tokens securely (for demo, just send in response)
+      // In production, save to DB or secure storage
+      res.json({ tokens: tokenRes.data });
+    } catch (err: any) {
+      res.status(500).json({ error: err?.response?.data || String(err) });
+    }
+  });
+}
 // ADMIN: Delete all users and email leads (for testing/reset only)
 // POST /api/admin/clear-users
 // Body: { adminSecret: string }
@@ -37,6 +95,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
 import { storage } from "./storage";
+import { addAWeberSubscriber } from "./email";
 import { db } from "./db";
 import { insertEmailLeadSchema, insertAffiliateSaleSchema, insertUserSchema, users, emailSchedules, emailLeads, DOMAIN_NICHES, rentalContracts } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
@@ -53,6 +112,9 @@ import { notificationService } from "./websocket";
 
 // Helper function to get site-specific branding based on domain
 function getSiteBranding() {
+  // Register AWeber OAuth routes in your Express app (add this in your main server startup)
+  // import { registerAWeberOAuthRoutes } from "./routes";
+  // registerAWeberOAuthRoutes(app);
   const siteName = process.env.SITE_NAME || "RentAPog";
   const siteEmail = process.env.SITE_EMAIL || "sales@rentapog.com";
   const siteDomain = process.env.SITE_DOMAIN || "rentapog.com";
@@ -365,10 +427,26 @@ export async function registerRoutes(
       // Send simple welcome email (no login credentials)
       try {
 
+
         // Always use packages.rentapog.com for affiliate links
         const packagesLink = referrerCode
           ? `https://packages.rentapog.com/?aff=${referrerCode}`
           : `https://packages.rentapog.com`;
+
+        // --- AWeber automation: add new user to list ---
+        // NOTE: You should securely store and refresh the access token in production
+        const aweberAccessToken = process.env.AWEBER_ACCESS_TOKEN;
+        const aweberListId = "awlist6927906";
+        if (aweberAccessToken) {
+          addAWeberSubscriber({
+            accessToken: aweberAccessToken,
+            listId: aweberListId,
+            email: user.email,
+            name: user.name || undefined,
+          });
+        } else {
+          console.warn("[AWeber] No access token set. User not added to AWeber list.");
+        }
 
         const emailResult = await sendEmail({
           to: email,

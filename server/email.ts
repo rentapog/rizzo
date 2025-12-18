@@ -1,4 +1,76 @@
-import { Resend } from "resend";
+import axios from "axios";
+import FormData from "form-data";
+import Mailgun from "mailgun.js";
+// Mailgun email sending utility
+export async function sendAffiliateEmailMailgun({
+  toEmail,
+  affiliateCode = "rentapog",
+  subject = "Your Unique Affiliate Link Inside 🚀",
+  text,
+  html
+}: {
+  toEmail: string;
+  affiliateCode?: string;
+  subject?: string;
+  text?: string;
+  html?: string;
+}) {
+  const mailgun = new Mailgun(FormData);
+  const mg = mailgun.client({
+    username: "api",
+    key: process.env.API_KEY || "API_KEY",
+  });
+  const domain = process.env.MAILGUN_DOMAIN || "rentapog.com";
+  const defaultHtml = `<h2>Welcome to RentAPog!</h2><p>Your affiliate link is ready:</p><p><a href=\"https://packages.rentapog.com/?aff=${affiliateCode}\">https://packages.rentapog.com/?aff=${affiliateCode}</a></p>`;
+  const defaultText = `Welcome to RentAPog!\nYour affiliate link: https://packages.rentapog.com/?aff=${affiliateCode}`;
+  try {
+    const data = await mg.messages.create(domain, {
+      from: `RentAPog <sales@rentapog.com>`,
+      to: [toEmail],
+      subject,
+      text: text || defaultText,
+      html: html || defaultHtml,
+    });
+    return data;
+  } catch (error) {
+    console.error("[Mailgun] Failed to send email:", error);
+    return null;
+  }
+}
+
+// Utility: Add a subscriber to AWeber list
+export async function addAWeberSubscriber({
+  accessToken,
+  listId,
+  email,
+  name
+}: {
+  accessToken: string;
+  listId: string;
+  email: string;
+  name?: string;
+}) {
+  try {
+    const res = await axios.post(
+      `https://api.aweber.com/1.0/accounts/me/lists/${listId}/subscribers`,
+      {
+        email,
+        name,
+        tags: ["rentapog"],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.data;
+  } catch (err: any) {
+    console.error("[AWeber] Failed to add subscriber:", err?.response?.data || err);
+    return null;
+  }
+}
 
 // Email templates for the 7-day sequence
 const emailTemplates = {
@@ -79,27 +151,3 @@ const emailTemplates = {
   }),
 };
 
-  toEmail: string,
-  affiliateCode: string,
-  emailType: string
-) {
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const template = emailTemplates[emailType as keyof typeof emailTemplates];
-    if (!template) {
-      console.error(`Unknown email type: ${emailType}`);
-      return false;
-    }
-    const { subject, html } = template(affiliateCode);
-    await resend.emails.send({
-      from: "RentAPog <sales@rentapog.com>",
-      to: toEmail,
-      subject,
-      html,
-    });
-    return true;
-  } catch (error) {
-    console.error(`Failed to send ${emailType} email:`, error);
-    return false;
-  }
-}
