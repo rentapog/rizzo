@@ -149,74 +149,29 @@ function getStripeConfig(hostname?: string) {
   };
 }
 
-// Helper function to send emails using either SendGrid or Resend
+// Helper function to send emails using Mailgun only
+import { sendAffiliateEmailMailgun } from "./email";
 async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
-  const branding = getSiteBranding();
-  
-  // Try SendGrid first if configured (for airizzos.com)
-  if (process.env.SENDGRID_API_KEY) {
-    try {
-      const apiKey = process.env.SENDGRID_API_KEY.trim();
-      
-      // Validate SendGrid API key format
-      if (!apiKey.startsWith('SG.')) {
-        console.error(`[Email] ✗ SendGrid API key invalid (must start with 'SG.') - falling back to Resend`);
-        // Don't return - fall through to Resend
-      } else {
-        const sgMail = await import("@sendgrid/mail");
-        sgMail.default.setApiKey(apiKey);
-        
-        await sgMail.default.send({
-          to,
-          from: branding.fromEmail,
-          replyTo: branding.email,
-          subject,
-          html,
-          text,
-          headers: {
-            'List-Unsubscribe': `<mailto:${branding.email}?subject=unsubscribe>`,
-          },
-        });
-        
-        console.log(`[Email] ✓ Sent via SendGrid to ${to}`);
-        return { success: true, provider: 'sendgrid' };
-      }
-    } catch (error: any) {
-      console.error(`[Email] ✗ SendGrid failed: ${error?.message || error}`);
-      console.error(`[Email] Attempting fallback to Resend...`);
-      // Don't return - fall through to Resend
+  // Use Mailgun for all transactional emails
+  try {
+    const result = await sendAffiliateEmailMailgun({
+      toEmail: to,
+      subject,
+      html,
+      text,
+      affiliateCode: "rentapog"
+    });
+    if (result && result.id) {
+      console.log(`[Email] ✓ Sent via Mailgun to ${to}`);
+      return { success: true, provider: 'mailgun' };
+    } else {
+      console.error(`[Email] ✗✗✗ Mailgun failed to send to ${to}`);
+      return { success: false, error: "Mailgun failed" };
     }
+  } catch (error: any) {
+    console.error(`[Email] ✗✗✗ Mailgun error: ${error?.message || error}`);
+    return { success: false, error, provider: 'mailgun' };
   }
-  
-  // Use Resend (for rentapog.com or as fallback)
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      
-      await resend.emails.send({
-        from: branding.fromEmail,
-        to,
-        replyTo: branding.email,
-        subject,
-        html,
-        text,
-        headers: {
-          'List-Unsubscribe': `<mailto:${branding.email}?subject=unsubscribe>`,
-        },
-      });
-      
-      console.log(`[Email] ✓ Sent via Resend to ${to}`);
-      return { success: true, provider: 'resend' };
-    } catch (error: any) {
-      console.error(`[Email] ✗ Resend error: ${error?.message || error}`);
-      return { success: false, error, provider: 'resend' };
-    }
-  }
-  
-  console.error("[Email] ✗✗✗ No email service configured!");
-  console.error("[Email] Set either SENDGRID_API_KEY or RESEND_API_KEY in environment");
-  return { success: false, error: "No email service configured" };
 }
 
 // Helper function to process daily charges using referral balance first
