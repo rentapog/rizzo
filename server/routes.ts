@@ -426,41 +426,27 @@ export async function registerRoutes(
 
       // Send simple welcome email (no login credentials)
       try {
-
-
         // Always use packages.rentapog.com for affiliate links
         const packagesLink = referrerCode
           ? `https://packages.rentapog.com/?aff=${referrerCode}`
           : `https://packages.rentapog.com`;
 
-        // --- AWeber automation: add new user to list ---
-        // NOTE: You should securely store and refresh the access token in production
-        const aweberAccessToken = process.env.AWEBER_ACCESS_TOKEN;
-        const aweberListId = "awlist6927906";
-        if (aweberAccessToken) {
-          addAWeberSubscriber({
-            accessToken: aweberAccessToken,
-            listId: aweberListId,
-            email: user.email,
-            name: user.name || undefined,
-          });
-        } else {
-          console.warn("[AWeber] No access token set. User not added to AWeber list.");
-        }
+        // Use correct branding
+        const branding = getSiteBranding();
 
-        const emailResult = await sendEmail({
-          to: email,
-          subject: `Welcome to ${siteBranding.name}`,
+        // Send via Mailgun (or fallback)
+        const emailResult = await sendAffiliateEmailMailgun({
+          toEmail: email,
+          affiliateCode: referrerCode || "rentapog",
+          subject: `Welcome to ${branding.name}`,
           html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #1e40af;">Welcome, ${name}</h2>
             <p style="font-size: 16px; color: #333;">Thank you for subscribing. We're excited to have you on board.</p>
-            
             <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-              <p style="margin: 0 0 15px 0; color: #1e40af; font-weight: bold;">Get Started with ${siteBranding.name}</p>
+              <p style="margin: 0 0 15px 0; color: #1e40af; font-weight: bold;">Get Started with ${branding.name}</p>
               <p style="margin: 0 0 15px 0; color: #475569;">View our available packages and choose the option that works best for you.</p>
               <a href="${packagesLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 16px;">View Available Packages</a>
             </div>
-            
             <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Next Steps:</p>
               <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; line-height: 1.6;">
@@ -470,20 +456,18 @@ export async function registerRoutes(
                 <li>Access your dashboard to manage your account</li>
               </ul>
             </div>
-            
             <p style="color: #666; text-align: center; margin-top: 30px; font-size: 14px;">
               If you have questions, please contact our support team.
             </p>
-            
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-              <p>${siteBranding.name}</p>
+              <p>${branding.name}</p>
             </div>
           </div>`,
-          text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${siteBranding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${siteBranding.name}`,
+          text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${branding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${branding.name}`,
         });
 
-        if (emailResult.success) {
-          console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via ${emailResult.provider}`);
+        if (emailResult && emailResult.id) {
+          console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via Mailgun`);
         } else {
           console.error(`[Home Signup] ✗✗✗ FAILED to send welcome email to ${email}`);
         }
