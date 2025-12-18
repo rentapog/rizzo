@@ -190,6 +190,7 @@ function getMailgunClient() {
   });
 }
 
+export async function sendTestEmail(toEmail: string) {
   try {
     const mg = getMailgunClient();
     if (!mg) return false;
@@ -216,6 +217,7 @@ function getMailgunClient() {
   }
 }
 
+export async function startEmailWorker() {
   console.log("[Email Worker] ✓ Starting email scheduler...");
   const mg = getMailgunClient();
   if (!mg) {
