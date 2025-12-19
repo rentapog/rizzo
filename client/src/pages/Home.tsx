@@ -110,9 +110,8 @@ export default function Home() {
           }),
         }).catch(() => {});
 
-        // Redirect straight to packages after signup
-        const packagesCode = data.packagesAffiliateCode || data.affiliateLink || data.username;
-        window.location.href = `https://packages.rentapog.com/?aff=${packagesCode}`;
+        // Redirect to check email instructions page after signup
+        window.location.href = "/check-email-instructions";
       } else {
         const data = await res.json();
         toast({
