@@ -8,18 +8,7 @@ import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-    // Dynamically load the AWeber form script on mount
-    useEffect(() => {
-      const scriptId = "aweber-wjs-ka1zb45kz";
-      if (!document.getElementById(scriptId)) {
-        const js = document.createElement("script");
-        js.id = scriptId;
-        js.src = "//forms.aweber.com/form/89/873792089.js";
-        js.type = "text/javascript";
-        document.body.appendChild(js);
-      }
-      // No need to remove script on unmount for this use case
-    }, []);
+    // ...AWeber script removed to prevent document.write errors...
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
