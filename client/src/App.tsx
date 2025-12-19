@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import CheckEmailInstructions from "@/pages/check-email-instructions";
 import Layout from "@/components/Layout";
 import Home from "@/pages/Home";
 import Affiliate from "@/pages/Affiliate";
@@ -219,7 +220,7 @@ function Router() {
       <Route path="/affiliate/:slug/faq">{() => <BrandedFAQ />}</Route>
 
       {/* Check Email Instructions Route */}
-      <Route path="/check-email-instructions">{() => import("@/pages/check-email-instructions").then(mod => <mod.default />)}</Route>
+      <Route path="/check-email-instructions">{() => <CheckEmailInstructions />}</Route>
 
       <Route component={NotFound} />
     </Switch>
