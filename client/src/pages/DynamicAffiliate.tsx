@@ -33,7 +33,7 @@ export default function DynamicAffiliate() {
       });
       return;
     }
-    
+
     setLoading(true);
     try {
       // Always use "rentapog" affiliate code for admin credit
@@ -46,10 +46,8 @@ export default function DynamicAffiliate() {
       if (res.ok) {
         setSubscribed(true);
         setEmail("");
-        toast({
-          title: "✓ Subscribed!",
-          description: "Check your email for your account details.",
-        });
+        // Redirect to check email instructions page
+        window.location.href = "/check-email-instructions";
       } else {
         const data = await res.json();
         toast({

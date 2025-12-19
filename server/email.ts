@@ -84,6 +84,16 @@ const emailTemplates = {
       <p>Your affiliate link is ready to start earning commissions:</p>
       <p><strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
       <p>Anyone who signs up through this link becomes your referral. You'll get 100% of their 1st and 3rd+ sales!</p>
+      <hr style="margin:32px 0;"/>
+      <h3 style="color:#2563eb;">How to Whitelist <span style="color:#2563eb;">support@rentapog.com</span>:</h3>
+      <ul style="margin-bottom:16px;">
+        <li><b>Gmail:</b> Open our email, click the three dots, select "Add to Contacts list". If in Spam, click "Not spam" first.</li>
+        <li><b>Outlook/Hotmail:</b> Open our email, right-click and select "Not Junk". Add to Safe Senders in settings if needed.</li>
+        <li><b>Yahoo:</b> Mark as "Not Spam" and add us to contacts.</li>
+        <li><b>Apple Mail:</b> Tap sender, then "Add to VIP" or "Add to Contacts".</li>
+        <li><b>Any provider:</b> Add support@rentapog.com to your address book and mark our emails as "Not Spam".</li>
+      </ul>
+      <p style="color:#64748b;font-size:13px;text-align:center;">Whitelisting our email ensures you never miss important updates from us!</p>
     `,
   }),
   day2: (affiliateCode: string) => ({

@@ -218,6 +218,9 @@ function Router() {
       <Route path="/affiliate/:slug/features">{() => <BrandedFeatures />}</Route>
       <Route path="/affiliate/:slug/faq">{() => <BrandedFAQ />}</Route>
 
+      {/* Check Email Instructions Route */}
+      <Route path="/check-email-instructions">{() => import("@/pages/CheckEmailInstructions").then(mod => <mod.default />)}</Route>
+
       <Route component={NotFound} />
     </Switch>
   );
