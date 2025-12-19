@@ -1701,7 +1701,7 @@ export async function registerRoutes(
         if (resendApiKey) {
           const resend = new Resend(resendApiKey);
           await resend.emails.send({
-            from: "RentAPog <sales@rentapog.com>",
+            from: "RentAPog <support@rentapog.com>",
             to: email,
             subject: "Your RentAPog Sub-Admin Account is Ready!",
             html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -3131,7 +3131,7 @@ export async function registerRoutes(
           
           // EMAIL 1: Quick Welcome
           await resend.emails.send({
-            from: "RentAPog <sales@rentapog.com>",
+            from: "RentAPog <support@rentapog.com>",
             to: email,
             subject: "You're In! Welcome to RentAPog",
             html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -3196,7 +3196,7 @@ export async function registerRoutes(
               
               if (referrer && referrer.email) {
                 await resend.emails.send({
-                  from: "RentAPog <sales@rentapog.com>",
+                  from: "RentAPog <support@rentapog.com>",
                   to: referrer.email,
                   subject: "🎉 New Lead! Someone subscribed through your page",
                   html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
