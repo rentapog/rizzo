@@ -227,7 +227,19 @@ function Router() {
   );
 }
 
+import { useLocation } from "wouter";
+
 export default function App() {
+  const [location] = useLocation();
+  if (location === "/check-email-instructions") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-lg w-full p-8 bg-white rounded-2xl shadow-xl border border-slate-200">
+          <CheckEmailInstructions />
+        </div>
+      </div>
+    );
+  }
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
