@@ -1,7 +1,6 @@
+import { Resend } from "resend";
 import axios from "axios";
-import FormData from "form-data";
-import Mailgun from "mailgun.js";
-// Mailgun email sending utility
+// Resend email sending utility
 export async function sendAffiliateEmailMailgun({
   toEmail,
   affiliateCode = "rentapog",
@@ -15,25 +14,20 @@ export async function sendAffiliateEmailMailgun({
   text?: string;
   html?: string;
 }) {
-  const mailgun = new Mailgun(FormData);
-  const mg = mailgun.client({
-    username: "api",
-    key: process.env.API_KEY || "API_KEY",
-  });
-  const domain = process.env.MAILGUN_DOMAIN || "rentapog.com";
-  const defaultHtml = `<h2>Welcome to RentAPog!</h2><p>Your affiliate link is ready:</p><p><a href=\"https://packages.rentapog.com/?aff=${affiliateCode}\">https://packages.rentapog.com/?aff=${affiliateCode}</a></p>`;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const defaultHtml = `<h2>Welcome to RentAPog!</h2><p>Your affiliate link is ready:</p><p><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></p>`;
   const defaultText = `Welcome to RentAPog!\nYour affiliate link: https://packages.rentapog.com/?aff=${affiliateCode}`;
   try {
-    const data = await mg.messages.create(domain, {
-      from: `RentAPog <sales@rentapog.com>`,
-      to: [toEmail],
+    const data = await resend.emails.send({
+      from: process.env.RESEND_FROM || "RentAPog <sales@rentapog.com>",
+      to: toEmail,
       subject,
       text: text || defaultText,
       html: html || defaultHtml,
     });
     return data;
   } catch (error) {
-    console.error("[Mailgun] Failed to send email:", error);
+    console.error("[Resend] Failed to send email:", error);
     return null;
   }
 }

@@ -1,4 +1,4 @@
-import { sendAffiliateEmailMailgun } from "./email";
+// Duplicate import removed
 // Public API route to send affiliate email via Mailgun
 export function registerMailgunEmailRoute(app: Express) {
   app.post("/api/send-affiliate-email", async (req, res) => {
@@ -9,8 +9,8 @@ export function registerMailgunEmailRoute(app: Express) {
         toEmail,
         affiliateCode: affiliateCode || "rentapog",
       });
-      if (result && result.id) {
-        return res.json({ success: true, id: result.id });
+      if (result && result.data && result.data.id) {
+        return res.json({ success: true, id: result.data.id });
       } else {
         return res.status(500).json({ error: "Failed to send email" });
       }
@@ -161,12 +161,12 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
       text,
       affiliateCode: "rentapog"
     });
-    if (result && result.id) {
-      console.log(`[Email] ✓ Sent via Mailgun to ${to}`);
-      return { success: true, provider: 'mailgun' };
+    if (result && result.data && result.data.id) {
+      console.log(`[Email] ✓ Sent via Resend to ${to}`);
+      return { success: true, provider: 'resend' };
     } else {
-      console.error(`[Email] ✗✗✗ Mailgun failed to send to ${to}`);
-      return { success: false, error: "Mailgun failed" };
+      console.error(`[Email] ✗✗✗ Resend failed to send to ${to}`);
+      return { success: false, error: "Resend failed" };
     }
   } catch (error: any) {
     console.error(`[Email] ✗✗✗ Mailgun error: ${error?.message || error}`);
@@ -421,8 +421,8 @@ export async function registerRoutes(
           text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${branding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${branding.name}`,
         });
 
-        if (emailResult && emailResult.id) {
-          console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via Mailgun`);
+        if (emailResult && emailResult.data && emailResult.data.id) {
+          console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via Resend`);
         } else {
           console.error(`[Home Signup] ✗✗✗ FAILED to send welcome email to ${email}`);
         }
