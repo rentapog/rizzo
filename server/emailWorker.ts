@@ -1,5 +1,4 @@
-import Mailgun from "mailgun.js";
-import FormData from "form-data";
+import { Resend } from "resend";
 import { storage } from "./storage";
 
 // Helper to format subdomain URL correctly
@@ -176,38 +175,33 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
 };
 
 
-function getMailgunClient() {
-  const apiKey = process.env.MAILGUN_API_KEY;
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.error("[Email Worker] ✗ CRITICAL: MAILGUN_API_KEY not set!");
+    console.error("[Email Worker] ✗ CRITICAL: RESEND_API_KEY not set!");
     return null;
   }
-  const mailgun = new Mailgun(FormData);
-  return mailgun.client({
-    username: "api",
-    key: apiKey,
-    url: process.env.MAILGUN_BASE_URL || "https://api.mailgun.net"
-  });
+  return new Resend(apiKey);
 }
 
 export async function sendTestEmail(toEmail: string) {
   try {
-    const mg = getMailgunClient();
-    if (!mg) return false;
+    const resend = getResendClient();
+    if (!resend) return false;
     const unsubscribeUrl = `https://rentapog.com/unsubscribe?email=${encodeURIComponent(toEmail)}`;
-    await mg.messages.create(process.env.MAILGUN_DOMAIN || "rentapog.com", {
-      from: "RentAPog <sales@rentapog.com>",
-      to: [toEmail],
+    await resend.emails.send({
+      from: process.env.RESEND_FROM || "RentAPog <sales@rentapog.com>",
+      to: toEmail,
       subject: "Test Email - RentAPog System",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1>Test email sent successfully!</h1>
-        <p>Your email system is working with Mailgun!</p>
+        <p>Your email system is working with Resend!</p>
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
           <p>RentAPog - Daily Domain Rental Platform</p>
           <p><a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a></p>
         </div>
       </div>`,
-      text: `Test email sent successfully!\n\nYour email system is working with Mailgun!\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: ${unsubscribeUrl}`,
+      text: `Test email sent successfully!\n\nYour email system is working with Resend!\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: ${unsubscribeUrl}`,
     });
     console.log(`[Email Worker] ✓ Test email sent to ${toEmail}`);
     return true;
@@ -219,9 +213,9 @@ export async function sendTestEmail(toEmail: string) {
 
 export async function startEmailWorker() {
   console.log("[Email Worker] ✓ Starting email scheduler...");
-  const mg = getMailgunClient();
-  if (!mg) {
-    console.error("[Email Worker] ✗ Cannot start - Mailgun not configured");
+  const resend = getResendClient();
+  if (!resend) {
+    console.error("[Email Worker] ✗ Cannot start - Resend not configured");
     return;
   }
 
@@ -271,9 +265,9 @@ export async function startEmailWorker() {
           }
 
           const { subject, html, text } = template(affiliateCodeToUse, userSubdomain, record.email);
-          await mg.messages.create(process.env.MAILGUN_DOMAIN || "rentapog.com", {
-            from: "RentAPog <sales@rentapog.com>",
-            to: [record.email],
+          await resend.emails.send({
+            from: process.env.RESEND_FROM || "RentAPog <sales@rentapog.com>",
+            to: record.email,
             subject,
             html,
             text,
