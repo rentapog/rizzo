@@ -8,8 +8,8 @@ interface BrandedFooterProps {
 }
 
 export function BrandedFooter({ theme, brandName, slug }: BrandedFooterProps) {
-  const currentTheme = designThemes[theme];
 
+  const currentTheme = designThemes[theme];
   const slugPath = slug ? `/affiliate/${slug}` : "";
 
   return (
@@ -30,9 +30,14 @@ export function BrandedFooter({ theme, brandName, slug }: BrandedFooterProps) {
                 </a>
               </li>
               <li>
-                <a href="https://packages.rentapog.com" className="hover:text-white transition">
-                  Pricing
-                </a>
+                <Link href="/pricing">
+                  <a className="hover:text-white transition">Pricing</a>
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund-policy">
+                  <a className="hover:text-white transition">Refund Policy</a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -60,14 +65,19 @@ export function BrandedFooter({ theme, brandName, slug }: BrandedFooterProps) {
             <h4 className="font-semibold text-white mb-4">Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="https://rentapog.com/privacy" className="hover:text-white transition">
-                  Privacy Policy
-                </a>
+                <Link href="/privacy">
+                  <a className="hover:text-white transition">Privacy Policy</a>
+                </Link>
               </li>
               <li>
-                <a href="https://rentapog.com/terms" className="hover:text-white transition">
-                  Terms & Conditions
-                </a>
+                <Link href="/terms">
+                  <a className="hover:text-white transition">Terms & Conditions</a>
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund-policy">
+                  <a className="hover:text-white transition">Refund Policy</a>
+                </Link>
               </li>
               <li>
                 <a href="https://rentapog.com" className="hover:text-white transition">
@@ -103,12 +113,15 @@ export function BrandedFooter({ theme, brandName, slug }: BrandedFooterProps) {
             © 2025 {brandName}. All rights reserved. | Powered by RentAPog
           </p>
           <div className="flex gap-4 mt-4 md:mt-0 text-sm">
-            <a href="https://rentapog.com/privacy" className="opacity-75 hover:text-white transition">
-              Privacy
-            </a>
-            <a href="https://rentapog.com/terms" className="opacity-75 hover:text-white transition">
-              Terms
-            </a>
+            <Link href="/privacy">
+              <a className="opacity-75 hover:text-white transition">Privacy</a>
+            </Link>
+            <Link href="/terms">
+              <a className="opacity-75 hover:text-white transition">Terms</a>
+            </Link>
+            <Link href="/refund-policy">
+              <a className="opacity-75 hover:text-white transition">Refund Policy</a>
+            </Link>
             <Link href={`${slugPath}/contact`}>
               <a className="opacity-75 hover:text-white transition">Contact</a>
             </Link>
