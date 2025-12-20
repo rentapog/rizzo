@@ -13,6 +13,8 @@ import Dashboard from "@/pages/Dashboard";
 import Legal from "@/pages/Legal";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import Pricing from "@/pages/Pricing";
+import Refund from "@/pages/Refund";
 import Features from "@/pages/Features";
 import HowItWorks from "@/pages/HowItWorks";
 import DomainRental from "@/pages/DomainRental";
@@ -200,6 +202,8 @@ function Router() {
       <Route path="/legal">{() => <Legal />}</Route>
       <Route path="/privacy">{() => <Privacy />}</Route>
       <Route path="/terms">{() => <Terms />}</Route>
+      <Route path="/pricing">{() => <Pricing />}</Route>
+      <Route path="/refund">{() => <Refund />}</Route>
       <Route path="/features">{() => <Features />}</Route>
       <Route path="/how-it-works">{() => <HowItWorks />}</Route>
       <Route path="/howitworks">{() => <HowItWorks />}</Route>

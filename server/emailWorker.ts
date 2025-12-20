@@ -43,21 +43,21 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
       };
     },
   day0: (code, subdomain, email = '') => {
-    const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
+    // Always link to whitelist instructions page for first email
+    const whitelistUrl = `https://rentapog.com/whitelist-email?aff=${code}`;
     return {
       subject: "Your Unique Affiliate Link Inside",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #1e40af;">Welcome to RentAPog!</h2>
-        <p>Your affiliate link is ready to start earning commissions:</p>
-        <p style="background: #f0f9ff; padding: 15px; border-radius: 8px; text-align: center;">
-          <a href="${link}" style="color: #2563eb; font-size: 18px; font-weight: bold; text-decoration: underline;">${linkDisplay}</a>
+        <p>Your affiliate link is ready to start earning commissions, but first:</p>
+        <p style="background: #fef9c3; padding: 15px; border-radius: 8px; text-align: center;">
+          <a href="${whitelistUrl}" style="color: #b45309; font-size: 18px; font-weight: bold; text-decoration: underline;">Click here to learn how to whitelist our emails</a>
         </p>
-        <p>Start sharing and earn 100% on 1st and 3rd+ sales!</p>
+        <p style="margin-top: 18px;">This ensures you get all your commission notifications and important updates.</p>
+        <p>After whitelisting, you'll find your affiliate link and next steps on that page.</p>
         ${getEmailFooter(email)}
       </div>`,
-      text: `Welcome to RentAPog!\n\nYour affiliate link is ready to start earning commissions:\n\n${link}\n\nStart sharing and earn 100% on 1st and 3rd+ sales!${getPlainTextFooter(email)}`
+      text: `Welcome to RentAPog!\n\nYour affiliate link is ready to start earning commissions.\n\nBefore you begin, visit: ${whitelistUrl}\n\nThis page explains how to whitelist our emails so you never miss a commission.\n\nAfter whitelisting, you'll see your affiliate link and next steps.\n${getPlainTextFooter(email)}`
     };
   },
   day2: (code, subdomain, email = '') => {
