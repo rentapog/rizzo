@@ -205,13 +205,13 @@ export default function Home() {
                 RentAPog - Try FREE for 3 Days
               </div>
               <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
-                Rent A Pog. <br/>
-                <span className="text-primary">Get Paid Daily.</span>
+                Rent A Pog (Web Hosting Space).<br/>
+                <span className="text-primary">Rent Out Hosting Space Daily.</span>
               </h1>
               <p className="text-lg text-slate-600 max-w-[600px] leading-relaxed">
-                The world's first daily-pay pog rental platform. Try it completely FREE for 3 days - no risk, cancel anytime!
+                A "pog" is your own hosting space on the web. Rent out your pog daily and earn income—no tech skills needed! Try it completely FREE for 3 days—no risk, cancel anytime!
                 <br/><br/>
-                <span className="font-semibold text-slate-900">Risk-Free Trial:</span> Start earning with zero upfront cost. After 3 days, daily billing begins. Cancel anytime during your trial.
+                <span className="font-semibold text-slate-900">Risk-Free Trial:</span> Start renting out your hosting space with zero upfront cost. After 3 days, daily billing begins. Cancel anytime during your trial.
               </p>
               
               <div className="space-y-4 max-w-lg">
