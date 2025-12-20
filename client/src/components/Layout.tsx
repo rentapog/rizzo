@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import LiveUpgradeFeed from "./LiveUpgradeFeed";
 
@@ -142,6 +142,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="hover:text-white transition">Terms & Conditions</Link></li>
+                <li><Link href="/refund" className="hover:text-white transition">Refund Policy</Link></li>
                 <li><Link href="/terms" className="hover:text-white transition">Disclaimer</Link></li>
               </ul>
             </div>
