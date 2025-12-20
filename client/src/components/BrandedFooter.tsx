@@ -70,6 +70,11 @@ export function BrandedFooter({ theme, brandName, slug }: BrandedFooterProps) {
                 </a>
               </li>
               <li>
+                <a href="https://rentapog.com/refund" className="hover:text-white transition">
+                  Refund Policy
+                </a>
+              </li>
+              <li>
                 <a href="https://rentapog.com" className="hover:text-white transition">
                   Disclaimer
                 </a>
