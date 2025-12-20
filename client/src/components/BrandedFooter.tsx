@@ -109,6 +109,9 @@ export function BrandedFooter({ theme, brandName, slug }: BrandedFooterProps) {
             <a href="https://rentapog.com/terms" className="opacity-75 hover:text-white transition">
               Terms
             </a>
+            <a href="https://rentapog.com/refund-policy" className="opacity-75 hover:text-white transition">
+              Refund Policy
+            </a>
             <Link href={`${slugPath}/contact`}>
               <a className="opacity-75 hover:text-white transition">Contact</a>
             </Link>
