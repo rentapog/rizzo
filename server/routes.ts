@@ -1,330 +1,66 @@
-// Duplicate import removed
-// Public API route to send affiliate email via Mailgun
-export function registerMailgunEmailRoute(app: Express) {
-  app.post("/api/send-affiliate-email", async (req, res) => {
-    const { toEmail, affiliateCode } = req.body;
-    if (!toEmail) return res.status(400).json({ error: "Missing toEmail" });
-    try {
-      const result = await sendAffiliateEmailMailgun({
-        toEmail,
-        affiliateCode: affiliateCode || "rentapog",
-      });
-      if (result && result.data && result.data.id) {
-        return res.json({ success: true, id: result.data.id });
-      } else {
-        return res.status(500).json({ error: "Failed to send email" });
-      }
-    } catch (err) {
-      return res.status(500).json({ error: String(err) });
-    }
-  });
-}
-// --- AWeber OAuth Integration ---
-import axios from "axios";
 
-export function registerAWeberOAuthRoutes(app: Express) {
-  // Step 1: Redirect user to AWeber OAuth consent
-  app.get("/api/aweber/auth", (req, res) => {
-    const clientId = process.env.AWEBER_CLIENT_ID;
-    const redirectUri = encodeURIComponent(process.env.AWEBER_REDIRECT_URI!);
-    const state = crypto.randomBytes(16).toString("hex");
-    const authUrl = `https://auth.aweber.com/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=account.read+list.read+subscriber.read+subscriber.write&state=${state}`;
-    res.redirect(authUrl);
-  });
-
-  // Step 2: Handle OAuth callback and exchange code for tokens
-  app.get("/api/aweber/callback", async (req, res) => {
-    const code = req.query.code as string;
-    if (!code) return res.status(400).send("Missing code");
-    try {
-      const tokenRes = await axios.post(
-        "https://auth.aweber.com/oauth2/token",
-        new URLSearchParams({
-          grant_type: "authorization_code",
-          code,
-          redirect_uri: process.env.AWEBER_REDIRECT_URI!,
-          client_id: process.env.AWEBER_CLIENT_ID!,
-          client_secret: process.env.AWEBER_CLIENT_SECRET!,
-        }),
-        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-      );
-      // Store tokens securely (for demo, just send in response)
-      // In production, save to DB or secure storage
-      res.json({ tokens: tokenRes.data });
-    } catch (err: any) {
-      res.status(500).json({ error: err?.response?.data || String(err) });
-    }
-  });
-}
-// ADMIN: Delete all users and email leads (for testing/reset only)
-// POST /api/admin/clear-users
-// Body: { adminSecret: string }
-// Protected by ADMIN_PIN
-export function registerAdminClearUsersRoute(app: any) {
-  app.post("/api/admin/clear-users", async (req: Request, res: Response) => {
-    if (req.body.adminSecret !== process.env.ADMIN_PIN) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-    try {
-      // Delete all users and email leads
-      await storage.deleteAllUsersAndLeads();
-      res.json({ success: true, message: "All users and email leads deleted." });
-    } catch (err) {
-      res.status(500).json({ error: String(err) });
-    }
-  });
-}
-// TEMPORARY: Admin-only route to clear all email leads (for testing only)
-// This should be registered after 'app' is defined in index.ts, but for now, export as a function
-import type { Request, Response } from "express";
-export function registerAdminClearLeadsRoute(app: any, db: any, emailLeads: any) {
-  app.post("/api/admin/clear-leads", async (req: Request, res: Response) => {
-    // Simple admin check (replace with real auth in production)
-    if (req.body.adminSecret !== process.env.ADMIN_PIN) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-    try {
-      await db.delete(emailLeads);
-      res.json({ success: true, message: "All email leads deleted." });
-    } catch (err) {
-      res.status(500).json({ error: String(err) });
-    }
-  });
-}
-import type { Express } from "express";
-import { createServer, type Server } from "http";
-import crypto from "crypto";
+import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
-import { addAWeberSubscriber } from "./email";
-import { db } from "./db";
-import { insertEmailLeadSchema, insertAffiliateSaleSchema, insertUserSchema, users, emailSchedules, emailLeads, DOMAIN_NICHES, rentalContracts } from "@shared/schema";
-import { eq, sql } from "drizzle-orm";
-import { z } from "zod";
-import bcryptjs from "bcryptjs";
-import Stripe from "stripe";
-const square = require("square");
-const Client = square.Client;
-const Environment = square.Environment;
-console.log("Square Environment object:", Environment);
-import Anthropic from "@anthropic-ai/sdk";
-import { registerTeamAndDeploymentRoutes } from "./routes-team-deployment";
-import { registerWebsiteBuilderRoutes } from "./routes-website-builder";
-import { registerUserSiteRoutes } from "./routes-user-sites";
-import { createSubdomain, setupDomainForwarding, isSubdomainAvailable, fixSubdomainProxy, getAllDnsRecords } from "./cloudflare";
-import nodemailer from "nodemailer";
-import { notificationService } from "./websocket";
+const { Resend } = require("resend");
 
-// Helper function to get site-specific branding based on domain
+// --- Helpers ---
 function getSiteBranding() {
-  // Register AWeber OAuth routes in your Express app (add this in your main server startup)
-  // import { registerAWeberOAuthRoutes } from "./routes";
-  // registerAWeberOAuthRoutes(app);
-  const siteName = process.env.SITE_NAME || "RentAPog";
-  const siteEmail = process.env.SITE_EMAIL || "sales@rentapog.com";
-  const siteDomain = process.env.SITE_DOMAIN || "rentapog.com";
-  
   return {
-    name: siteName,
-    email: siteEmail,
-    domain: siteDomain,
-    fromEmail: `${siteName} <${siteEmail}>`,
+    name: process.env.SITE_NAME || "RentAPog",
+    email: process.env.SITE_EMAIL || "support@rentapog.com",
+    domain: process.env.SITE_DOMAIN || "rentapog.com",
   };
 }
 
-// Helper function to get domain-specific Stripe keys
-function getStripeConfig(hostname?: string) {
-  // If hostname is airizzos.com or packages.airizzos.com, use test keys
-  if (hostname && (hostname.includes('airizzos.com'))) {
-    const testKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_API_KEY;
-    const testWebhook = process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
-    console.log(`[Stripe Config] Using TEST keys for ${hostname}`);
-    return {
-      secretKey: testKey,
-      webhookSecret: testWebhook,
-      isTest: true
-    };
-  }
-  
-  // Default to production keys
-  return {
-    secretKey: process.env.STRIPE_API_KEY,
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-    isTest: false
-  };
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Helper function to send emails using Mailgun only
-import { sendAffiliateEmailMailgun } from "./email";
 async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
-  // Use Mailgun for all transactional emails
   try {
-    const result = await sendAffiliateEmailMailgun({
-      toEmail: to,
+    const result = await resend.emails.send({
+      from: `${getSiteBranding().name} <${getSiteBranding().email}>`,
+      to,
       subject,
       html,
       text,
-      affiliateCode: "rentapog"
     });
-    if (result && result.data && result.data.id) {
-      console.log(`[Email] ✓ Sent via Resend to ${to}`);
-      return { success: true, provider: 'resend' };
-    } else {
-      console.error(`[Email] ✗✗✗ Resend failed to send to ${to}`);
-      return { success: false, error: "Resend failed" };
-    }
-  } catch (error: any) {
-    console.error(`[Email] ✗✗✗ Mailgun error: ${error?.message || error}`);
-    return { success: false, error, provider: 'mailgun' };
+    return { success: true, id: result.id };
+  } catch (err: any) {
+    return { success: false, error: err?.message || String(err) };
   }
 }
 
-// Helper function to process daily charges using referral balance first
-async function processChargeWithReferralBalance(userId: string, chargeAmount: number) {
-  const user = await storage.getUserById(userId);
-  if (!user) return { success: false, error: "User not found" };
-
-  // First, use referral balance to cover as much as possible
-  const referralBalanceUsed = Math.min(user.referralBalance, chargeAmount);
-  const remainingCharge = chargeAmount - referralBalanceUsed;
-
-  // Deduct from referral balance
-  if (referralBalanceUsed > 0) {
-    await storage.deductReferralBalance(userId, referralBalanceUsed);
-  }
-
-  // If there's remaining charge, deduct from account balance
-  if (remainingCharge > 0) {
-    if (user.accountBalance < remainingCharge) {
-      // INSUFFICIENT FUNDS: Cancel account
-      await storage.cancelUserAccount(userId);
-      return { success: false, error: "Insufficient funds. Account cancelled." };
+// --- Main Route Registration ---
+export function registerRoutes(app: Express) {
+  // Send affiliate welcome email
+  app.post("/api/send-affiliate-email", async (req: Request, res: Response) => {
+    const { toEmail, affiliateCode, subject, html, text } = req.body;
+    if (!toEmail) return res.status(400).json({ error: "Missing toEmail" });
+    const branding = getSiteBranding();
+    const affCode = affiliateCode || "rentapog";
+    const defaultSubject = subject || `Welcome to ${branding.name}`;
+    const defaultHtml = html || `<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #1e40af;\">Welcome!</h2><p>Thank you for joining ${branding.name}. Your affiliate code is <b>${affCode}</b>.</p></div>`;
+    const defaultText = text || `Welcome! Thank you for joining ${branding.name}. Your affiliate code is ${affCode}.`;
+    const result = await sendEmail({
+      to: toEmail,
+      subject: defaultSubject,
+      html: defaultHtml,
+      text: defaultText,
+    });
+    if (result.success) {
+      return res.json({ success: true, id: result.id });
     } else {
-      await storage.updateAccountBalance(userId, -remainingCharge);
-    }
-  }
-
-  return {
-    success: true,
-    referralBalanceUsed,
-    accountBalanceUsed: remainingCharge,
-    totalCharged: chargeAmount
-  };
-}
-
-export async function registerRoutes(
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
-  // --- SQUARE PAYMENT ENDPOINT ---
-  app.post("/api/payments/square/create-checkout", async (req, res) => {
-    try {
-      const { price, email, packageTitle } = req.body;
-      // Debug log for price value and type
-      console.log("[Square Checkout] Received price:", price, "Type:", typeof price);
-      // Validate price is one of the allowed packages
-      const allowedPrices = [20,49,99,149,199,249,299,349,399,449,499];
-      if (!allowedPrices.includes(Number(price))) {
-        console.log("[Square Checkout] Invalid price after Number():", Number(price), "Allowed:", allowedPrices);
-        return res.status(400).json({ error: "Invalid package price" });
-      }
-      // Set up Square client
-      const squareClient = new Client({
-        accessToken: process.env.SQUARE_ACCESS_TOKEN,
-        environment: Environment.Sandbox,
-      });
-      // Create order
-      const { result: orderResult } = await squareClient.ordersApi.createOrder({
-        order: {
-          locationId: process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A", // Replace with your real location ID
-          lineItems: [
-            {
-              name: packageTitle || `RentAPog Package $${price}`,
-              quantity: "1",
-              basePriceMoney: {
-                amount: Number(price) * 100, // cents
-                currency: "AUD"
-              }
-            }
-          ]
-        }
-      });
-      // Create checkout link
-      const { result: checkoutResult } = await squareClient.checkoutApi.createCheckout(
-        process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A",
-        {
-          order: { id: orderResult.order?.id },
-          askForShippingAddress: false,
-          merchantSupportEmail: process.env.SITE_EMAIL || "sales@rentapog.com",
-          prePopulateBuyerEmail: email,
-          redirectUrl: "https://backend.rentapog.com/payment-success"
-        }
-      );
-      res.json({ url: checkoutResult.checkout?.checkoutPageUrl });
-    } catch (error) {
-      console.error("[Square] Error creating checkout:", error);
-      res.status(500).json({ error: "Failed to create Square checkout" });
-    }
-  });
-  // Redirect sales.rentapog.com to packages.rentapog.com
-  app.use((req, res, next) => {
-    const host = req.get('host') || '';
-    if (host.includes('sales.rentapog.com')) {
-      const url = new URL(req.originalUrl, `https://${host}`);
-      const affCode = url.searchParams.get('aff') || 'rentapog';
-      return res.redirect(301, `https://packages.rentapog.com/?aff=${encodeURIComponent(affCode)}`);
-    }
-    next();
-  });
-
-  // Get user profile endpoint
-  app.get("/api/users/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const user = await storage.getUserById(id);
-      
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      res.json({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        referralCode: user.referralCode,
-        affiliateLink: user.affiliateLink,
-        accountBalance: user.accountBalance,
-        referralBalance: user.referralBalance,
-        salesCount: user.salesCount,
-        subscriptionStatus: user.subscriptionStatus,
-      });
-    } catch (error) {
-      console.error("Get user error:", error);
-      res.status(500).json({ error: "Failed to get user" });
-    }
-  });
-
-  // Get user's rented domains endpoint
-  app.get("/api/users/:id/domains", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const rentals = await storage.getUserRentals(id);
-      res.json(rentals);
-    } catch (error) {
-      console.error("Get user domains error:", error);
-      res.status(500).json({ error: "Failed to get user domains" });
+      return res.status(500).json({ error: result.error || "Failed to send email" });
     }
   });
 
   // Get current authenticated user from session
-  app.get("/api/auth/current", async (req, res) => {
+  app.get("/api/auth/current", async (req: Request, res: Response) => {
     try {
-      // Read user data from cookie
       const userCookie = req.cookies?.user;
       if (userCookie) {
         try {
           const userData = JSON.parse(decodeURIComponent(userCookie));
           if (userData && userData.id) {
-            // Verify user exists in database
             const user = await storage.getUserById(userData.id);
             if (user) {
               return res.json({
@@ -335,486 +71,209 @@ export async function registerRoutes(
                 affiliateLink: user.affiliateLink,
                 accountBalance: user.accountBalance,
                 referralBalance: user.referralBalance,
-                salesCount: user.salesCount,
-                subscriptionStatus: user.subscriptionStatus,
-              });
-            }
-          }
-        } catch (parseErr) {
-          console.error("[Auth] Failed to parse user cookie:", parseErr);
-        }
-      }
-      res.status(401).json({ message: "Not authenticated" });
-    } catch (error) {
-      console.error("[Auth] Get current user error:", error);
-      res.status(500).json({ message: "Failed to get current user" });
-    }
-  });
 
-  // Unsubscribe endpoint - cancels pending emails for the user
-  app.get("/api/unsubscribe", async (req, res) => {
-    try {
-      const email = req.query.email as string;
-      if (!email) {
-        return res.status(400).send(`
-          <html><head><title>Unsubscribe Error</title></head>
-          <body style="font-family: Arial; text-align: center; padding: 50px;">
-            <h1>Invalid Request</h1>
-            <p>No email address provided.</p>
-          </body></html>
-        `);
-      }
-      
-      // Cancel all pending emails for this user
-      await storage.cancelPendingEmailsByEmail(email);
-      
-      res.send(`
-        <html>
-        <head><title>Unsubscribed - RentAPog</title></head>
-        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8fafc;">
-          <div style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h1 style="color: #1e40af;">You've Been Unsubscribed</h1>
-            <p style="color: #64748b; font-size: 18px;">You will no longer receive emails from RentAPog.</p>
-            <p style="margin-top: 30px;">
-              <a href="https://rentapog.com" style="color: #2563eb; text-decoration: underline;">Return to RentAPog</a>
-            </p>
-          </div>
-        </body>
-        </html>
-      `);
-      console.log(`[Unsubscribe] User ${email} unsubscribed from emails`);
-    } catch (error) {
-      console.error("Unsubscribe error:", error);
-      res.status(500).send(`
-        <html><head><title>Error</title></head>
-        <body style="font-family: Arial; text-align: center; padding: 50px;">
-          <h1>Something went wrong</h1>
-          <p>Please try again later or contact support.</p>
-        </body></html>
-      `);
-    }
-  });
+                import type { Express, Request, Response } from "express";
+                import { storage } from "./storage";
+                const { Resend } = require("resend");
 
-  // Homepage signup - just adds to email list (no account creation until package purchase)
-  app.post("/api/affiliates/home-signup", async (req, res) => {
-    try {
-      const { email, name, referrerCode } = req.body;
+                // --- Helpers ---
+                function getSiteBranding() {
+                  return {
+                    name: process.env.SITE_NAME || "RentAPog",
+                    email: process.env.SITE_EMAIL || "support@rentapog.com",
+                    domain: process.env.SITE_DOMAIN || "rentapog.com",
+                  };
+                }
 
-      // Validate required fields
-      if (!email || !name) {
-        return res.status(400).json({ error: "Email and name are required" });
-      }
+                const resend = new Resend(process.env.RESEND_API_KEY);
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({ error: "Invalid email format" });
-      }
+                async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
+                  try {
+                    const result = await resend.emails.send({
+                      from: `${getSiteBranding().name} <${getSiteBranding().email}>`,
+                      to,
+                      subject,
+                      html,
+                      text,
+                    });
+                    return { success: true, id: result.id };
+                  } catch (err: any) {
+                    return { success: false, error: err?.message || String(err) };
+                  }
+                }
 
-      // Check if email already in list
-      const existingLead = await storage.getEmailLeadByEmail(email);
-      if (existingLead) {
-        return res.status(400).json({ error: "Email already subscribed" });
-      }
+                // --- Main Route Registration ---
+                export function registerRoutes(app: Express) {
+                  // Send affiliate welcome email
+                  app.post("/api/send-affiliate-email", async (req: Request, res: Response) => {
+                    const { toEmail, affiliateCode, subject, html, text } = req.body;
+                    if (!toEmail) return res.status(400).json({ error: "Missing toEmail" });
+                    const branding = getSiteBranding();
+                    const affCode = affiliateCode || "rentapog";
+                    const defaultSubject = subject || `Welcome to ${branding.name}`;
+                    const defaultHtml = html || `<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #1e40af;\">Welcome!</h2><p>Thank you for joining ${branding.name}. Your affiliate code is <b>${affCode}</b>.</p></div>`;
+                    const defaultText = text || `Welcome! Thank you for joining ${branding.name}. Your affiliate code is ${affCode}.`;
+                    const result = await sendEmail({
+                      to: toEmail,
+                      subject: defaultSubject,
+                      html: defaultHtml,
+                      text: defaultText,
+                    });
+                    if (result.success) {
+                      return res.json({ success: true, id: result.id });
+                    } else {
+                      return res.status(500).json({ error: result.error || "Failed to send email" });
+                    }
+                  });
 
-      // Add to email leads table (will be assigned to buyers via rotating pool)
-      try {
-        await storage.createEmailLead({
-          email,
-          source: referrerCode ? `referral:${referrerCode}` : "homepage",
-          affiliateLink: referrerCode || null,
-          verified: false,
-        });
-      } catch (dbErr: any) {
-        console.error(`[Home Signup] DB Error:`, dbErr);
-        // Return DB error details for debugging
-        return res.status(500).json({ error: dbErr?.message || "DB error", details: dbErr });
-      }
+                  // Sender endpoint: send a custom email
+                  app.post("/api/send-email", async (req: Request, res: Response) => {
+                    const { to, subject, html, text } = req.body;
+                    if (!to || !subject || !html) {
+                      return res.status(400).json({ error: "Missing required fields" });
+                    }
+                    const result = await sendEmail({ to, subject, html, text: text || html.replace(/<[^>]+>/g, "") });
+                    if (result.success) {
+                      return res.json({ success: true, id: result.id });
+                    } else {
+                      return res.status(500).json({ error: result.error || "Failed to send email" });
+                    }
+                  });
 
-      console.log(`[Home Signup] ✓ Email added to list: ${email} | Source: ${referrerCode || "homepage"}`);
+                  // Get current authenticated user from session
+                  app.get("/api/auth/current", async (req: Request, res: Response) => {
+                    try {
+                      const userCookie = req.cookies?.user;
+                      if (userCookie) {
+                        try {
+                          const userData = JSON.parse(decodeURIComponent(userCookie));
+                          if (userData && userData.id) {
+                            const user = await storage.getUserById(userData.id);
+                            if (user) {
+                              return res.json({
+                                id: user.id,
+                                email: user.email,
+                                name: user.name,
+                                referralCode: user.referralCode,
+                                affiliateLink: user.affiliateLink,
+                                accountBalance: user.accountBalance,
+                                referralBalance: user.referralBalance,
+                                salesCount: user.salesCount,
+                                subscriptionStatus: user.subscriptionStatus,
+                              });
+                            }
+                          }
+                        } catch (parseErr) {
+                          console.error("[Auth] Failed to parse user cookie:", parseErr);
+                        }
+                      }
+                      res.status(401).json({ message: "Not authenticated" });
+                    } catch (error) {
+                      console.error("[Auth] Get current user error:", error);
+                      res.status(500).json({ message: "Failed to get current user" });
+                    }
+                  });
 
-      // Send simple welcome email (no login credentials)
-      try {
-        // Always use packages.rentapog.com for affiliate links
-        const packagesLink = referrerCode
-          ? `https://packages.rentapog.com/?aff=${referrerCode}`
-          : `https://packages.rentapog.com`;
+                  // Unsubscribe endpoint - cancels pending emails for the user
+                  app.get("/api/unsubscribe", async (req: Request, res: Response) => {
+                    try {
+                      const email = req.query.email as string;
+                      if (!email) {
+                        return res.status(400).send(`
+                          <html><head><title>Unsubscribe Error</title></head>
+                          <body style="font-family: Arial; text-align: center; padding: 50px;">
+                            <h1>Invalid Request</h1>
+                            <p>No email address provided.</p>
+                          </body></html>
+                        `);
+                      }
+                      await storage.cancelPendingEmailsByEmail(email);
+                      res.send(`
+                        <html>
+                        <head><title>Unsubscribed - ${getSiteBranding().name}</title></head>
+                        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8fafc;">
+                          <div style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <h1>Unsubscribed</h1>
+                            <p>Your email has been removed from our list.</p>
+                          </div>
+                        </body></html>
+                      `);
+                    } catch (err) {
+                      res.status(500).send("Unsubscribe failed");
+                    }
+                  });
 
-        // Use correct branding
-        const branding = getSiteBranding();
+                  // Homepage signup - just adds to email list (no account creation until package purchase)
+                  app.post("/api/affiliates/home-signup", async (req: Request, res: Response) => {
+                    try {
+                      const { email, name, referrerCode } = req.body;
+                      if (!email || !name) {
+                        return res.status(400).json({ error: "Email and name are required" });
+                      }
+                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                      if (!emailRegex.test(email)) {
+                        return res.status(400).json({ error: "Invalid email format" });
+                      }
+                      const existingLead = await storage.getEmailLeadByEmail(email);
+                      if (existingLead) {
+                        return res.status(400).json({ error: "Email already subscribed" });
+                      }
+                      await storage.createEmailLead({
+                        email,
+                        source: referrerCode ? `referral:${referrerCode}` : "homepage",
+                        affiliateLink: referrerCode || null,
+                        verified: false,
+                      });
+                      const packagesLink = referrerCode
+                        ? `https://packages.${getSiteBranding().domain}/?aff=${referrerCode}`
+                        : `https://packages.${getSiteBranding().domain}`;
+                      const branding = getSiteBranding();
+                      const emailResult = await sendEmail({
+                        to: email,
+                        subject: `Welcome to ${branding.name}`,
+                        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                          <h2 style="color: #1e40af;">Welcome, ${name}</h2>
+                          <p style="font-size: 16px; color: #333;">Thank you for subscribing. We're excited to have you on board.</p>
+                          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+                            <p style="margin: 0 0 15px 0; color: #1e40af; font-weight: bold;">Get Started with ${branding.name}</p>
+                            <p style="margin: 0 0 15px 0; color: #475569;">View our available packages and choose the option that works best for you.</p>
+                            <a href="${packagesLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 16px;">View Available Packages</a>
+                          </div>
+                          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Next Steps:</p>
+                            <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; line-height: 1.6;">
+                              <li>Review the package options available</li>
+                              <li>New members receive a 3-day trial period</li>
+                              <li>Login credentials will be sent after package selection</li>
+                              <li>Access your dashboard to manage your account</li>
+                            </ul>
+                          </div>
+                          <p style="color: #666; text-align: center; margin-top: 30px; font-size: 14px;">
+                            If you have questions, please contact our support team.
+                          </p>
+                          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
+                            <p>${branding.name}</p>
+                          </div>
+                        </div>`,
+                        text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${branding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${branding.name}`,
+                      });
+                      if (emailResult && emailResult.success) {
+                        console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via Resend`);
+                      } else {
+                        console.error(`[Home Signup] ✗✗✗ FAILED to send welcome email to ${email}`);
+                      }
+                      res.json({
+                        success: true,
+                        message: "Thanks for subscribing! Check your email for next steps.",
+                      });
+                    } catch (err: any) {
+                      res.status(500).json({ error: err?.message || "Signup failed" });
+                    }
+                  });
 
-        // Send via Mailgun (or fallback)
-        const emailResult = await sendAffiliateEmailMailgun({
-          toEmail: email,
-          affiliateCode: referrerCode || "rentapog",
-          subject: `Welcome to ${branding.name}`,
-          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e40af;">Welcome, ${name}</h2>
-            <p style="font-size: 16px; color: #333;">Thank you for subscribing. We're excited to have you on board.</p>
-            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-              <p style="margin: 0 0 15px 0; color: #1e40af; font-weight: bold;">Get Started with ${branding.name}</p>
-              <p style="margin: 0 0 15px 0; color: #475569;">View our available packages and choose the option that works best for you.</p>
-              <a href="${packagesLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 16px;">View Available Packages</a>
-            </div>
-            <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Next Steps:</p>
-              <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; line-height: 1.6;">
-                <li>Review the package options available</li>
-                <li>New members receive a 3-day trial period</li>
-                <li>Login credentials will be sent after package selection</li>
-                <li>Access your dashboard to manage your account</li>
-              </ul>
-            </div>
-            <p style="color: #666; text-align: center; margin-top: 30px; font-size: 14px;">
-              If you have questions, please contact our support team.
-            </p>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-              <p>${branding.name}</p>
-            </div>
-          </div>`,
-          text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${branding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${branding.name}`,
-        });
-
-        if (emailResult && emailResult.data && emailResult.data.id) {
-          console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via Resend`);
-        } else {
-          console.error(`[Home Signup] ✗✗✗ FAILED to send welcome email to ${email}`);
-        }
-      } catch (emailErr: any) {
-        console.error(`[Home Signup] ✗✗✗ Email exception: ${emailErr?.message || emailErr}`);
-      }
-
-      res.json({ 
-        success: true, 
-        message: "Thanks for subscribing! Check your email for next steps." 
-      });
-    } catch (error: any) {
-      console.error("[Home Signup] Error:", error);
-      // Return error stack for debugging
-      res.status(500).json({ error: error?.message || "Signup failed", stack: error?.stack || null, details: error });
-    }
-  });
-
-  // Auth endpoints
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const { affiliateLink, username, ...userData } = req.body;
-      
-      // Optional: Affiliate link defaults to "admin" if not provided
-      const affiliate = (affiliateLink && typeof affiliateLink === "string") ? affiliateLink : "admin";
-
-      // REQUIRED: Must have username
-      if (!username || typeof username !== "string") {
-        return res.status(400).json({ message: "Username is required" });
-      }
-
-      // AUTO-GENERATE a secure random password (12 characters)
-      const crypto = await import("crypto");
-      const generatedPassword = crypto.randomBytes(6).toString('base64').slice(0, 12).replace(/[+/=]/g, '0');
-
-      const data = insertUserSchema.parse({ ...userData, affiliateLink: affiliate, password: generatedPassword });
-      const existing = await storage.getUserByEmail(data.email);
-      if (existing) {
-        return res.status(400).json({ message: "Email already in use" });
-      }
-
-      // Use username as referral code
-      const referralCode = username.toLowerCase();
-
-      // Hash the auto-generated password before storing
-      const hashedPassword = await bcryptjs.hash(generatedPassword, 10);
-      const user = await storage.createUser({ ...data, password: hashedPassword, referralCode });
-      
-      // CHECK TRIAL THRESHOLD: If referrer has active trial and got 3 referrals, end trial early
-      if (affiliate && affiliate !== "admin") {
-        try {
-          const referrer = await storage.getUserByReferralCode(affiliate);
-          if (referrer && referrer.trialStatus === "active") {
-            const hasMetThreshold = await storage.checkTrialReferralThreshold(referrer.id);
-            if (hasMetThreshold) {
-              await storage.endUserTrial(referrer.id, "referrals_met");
-              console.log(`[Register] Trial ended early for ${affiliate} - 3 referrals achieved!`);
-            }
-          }
-          
-          // Send real-time notification to the referrer about new signup
-          if (referrer) {
-            const { notificationService } = await import("./websocket");
-            notificationService.notifyNewSignup(referrer.id.toString(), user.name || user.email);
-          }
-        } catch (trialErr) {
-          console.error("[Register] Error checking trial threshold:", trialErr);
-        }
-      }
-      
-      // Send email with their password and personal affiliate link
-      try {
-        const branding = getSiteBranding();
-        const personalAffiliateLink = `https://${branding.domain}/?aff=${user.referralCode}`;
-        const backendUrl = `https://backend.${branding.domain}`;
-        
-        const emailResult = await sendEmail({
-          to: user.email,
-          subject: `Welcome to ${branding.name} - Your Login Details`,
-          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e40af;">Welcome! Your Account is Ready</h2>
-            <p style="font-size: 16px; color: #333;">Your account has been created successfully!</p>
-            
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-              <p style="margin: 0 0 10px 0; color: #92400e; font-weight: bold;">🔐 Your Login Details:</p>
-              <p style="margin: 5px 0;"><strong>Email:</strong> ${user.email}</p>
-              <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #fff; padding: 5px 10px; border-radius: 4px; font-size: 16px; color: #dc2626;">${generatedPassword}</code></p>
-              <p style="margin: 15px 0 5px 0; font-size: 14px; color: #92400e;">⚠️ Save this password securely! You can change it after logging in.</p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${backendUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">Login to Your Backoffice</a>
-            </div>
-            
-            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Your Personal Affiliate Link:</p>
-              <p style="font-size: 18px; color: #0066cc; font-weight: bold; margin: 0 0 15px 0;">${branding.domain}/?aff=${user.referralCode}</p>
-              <a href="${personalAffiliateLink}" style="display: inline-block; background: #10b981; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 14px; font-weight: bold;">Start Promoting & Earning</a>
-            </div>
-            
-            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0;">
-              <strong>How You Earn:</strong>
-              <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-                <li>100% commission on the 1st sale</li>
-                <li>Admin gets the 2nd sale (covers costs)</li>
-                <li>100% commission on the 3rd and ALL future sales!</li>
-              </ul>
-            </div>
-            
-            <p style="color: #666;"><strong>Your username:</strong> ${user.referralCode}</p>
-            <p style="color: #666;">Share your link everywhere: TikTok, Instagram, Facebook, email... anywhere!</p>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-              <p>${branding.name} - Daily Domain Rental Platform</p>
-            </div>
-          </div>`,
-          text: `Welcome! Your Account is Ready\n\nYour Login Details:\nEmail: ${user.email}\nPassword: ${generatedPassword}\n\n⚠️ Save this password securely! You can change it after logging in.\n\nLogin at: ${backendUrl}\n\nYour Personal Affiliate Link:\n${branding.domain}/?aff=${user.referralCode}\n\nHow You Earn:\n- 100% commission on the 1st sale\n- Admin gets the 2nd sale (covers costs)\n- 100% commission on the 3rd and ALL future sales!\n\nYour username: ${user.referralCode}\n\nShare your link everywhere!`,
-        });
-        
-        if (emailResult.success) {
-          console.log(`[Register] ✓✓✓ Confirmation email sent to ${user.email} via ${emailResult.provider}`);
-        } else {
-          console.error(`[Register] ✗✗✗ FAILED to send confirmation email to ${user.email}`);
-        }
-      } catch (emailErr: any) {
-        console.error(`[Register] ✗✗✗ Email exception: ${emailErr?.message || emailErr}`);
-      }
-      
-      // Note: createUser() automatically schedules all 7 emails, no need to duplicate here
-      res.json({ success: true, user });
-    } catch (error: any) {
-      console.error("[Register] Error:", error);
-      if (error instanceof z.ZodError) {
-        console.error("[Register] Validation errors:", error.errors);
-        res.status(400).json({ message: "Invalid input: " + error.errors.map(e => e.message).join(", ") });
-      } else {
-        res.status(500).json({ message: error?.message || "Registration failed" });
-      }
-    }
-  });
-
-  // Generate a secure admin session token
-  const generateAdminSessionToken = (): string => {
-    return crypto.randomBytes(32).toString('hex');
-  };
-
-  // Clean up expired sessions periodically (from database)
-  setInterval(async () => {
-    try {
-      await storage.cleanExpiredAdminSessions();
-    } catch (err) {
-      console.error("[Admin Sessions] Failed to clean expired sessions:", err);
-    }
-  }, 60000); // Check every minute
-
-  // ADMIN-ONLY login endpoint - requires 3-part authentication: email + password + secret PIN
-  // Includes lockout after 5 failed attempts (15 minute lockout)
-  app.post("/api/auth/admin-login", async (req, res) => {
-    try {
-      const { email, password, pin } = req.body;
-      console.log("[Admin Login DEBUG] Attempt received:");
-      console.log("[Admin Login DEBUG] - Email entered:", email);
-      console.log("[Admin Login DEBUG] - Password length:", password?.length || 0);
-      console.log("[Admin Login DEBUG] - PIN entered:", pin);
-      
-      if (!email || !password || !pin) {
-        return res.status(400).json({ message: "Email, password, and PIN required" });
-      }
-
-      const adminEmail = process.env.ADMIN_EMAIL;
-      const adminPassword = process.env.ADMIN_PASSWORD;
-      const adminPin = process.env.ADMIN_PIN;
-      
-      console.log("[Admin Login DEBUG] Expected credentials:");
-      console.log("[Admin Login DEBUG] - ADMIN_EMAIL configured:", !!adminEmail, "value:", adminEmail);
-      console.log("[Admin Login DEBUG] - ADMIN_PASSWORD configured:", !!adminPassword, "length:", adminPassword?.length || 0);
-      console.log("[Admin Login DEBUG] - ADMIN_PIN configured:", !!adminPin, "value:", adminPin);
-      console.log("[Admin Login DEBUG] Comparisons:");
-      console.log("[Admin Login DEBUG] - Email match:", email === adminEmail);
-      console.log("[Admin Login DEBUG] - Password match:", password === adminPassword);
-      console.log("[Admin Login DEBUG] - PIN match:", pin === adminPin);
-
-      // Check if admin is locked out
-      const lockStatus = await storage.isAdminLocked(adminEmail || email);
-      if (lockStatus.locked && lockStatus.lockedUntil) {
-        const remainingMs = new Date(lockStatus.lockedUntil).getTime() - Date.now();
-        const remainingMins = Math.ceil(remainingMs / 60000);
-        return res.status(423).json({ 
-          message: `Too many failed attempts. Try again in ${remainingMins} minute${remainingMins > 1 ? 's' : ''}.`,
-          lockedUntil: lockStatus.lockedUntil,
-          retryAfter: Math.ceil(remainingMs / 1000)
-        });
-      }
-      
-      // Verify all 3 credentials: email + password + PIN
-      if (adminEmail && adminPassword && adminPin && 
-          email === adminEmail && password === adminPassword && pin === adminPin) {
-        // Clear any failed login attempts on successful login
-        await storage.clearAdminLoginAttempts(adminEmail);
-        
-        // Generate a secure session token
-        const sessionToken = generateAdminSessionToken();
-        const expiresAt = new Date(Date.now() + (3 * 24 * 60 * 60 * 1000)); // 3 days
-        
-        // Store session in DATABASE (persists across restarts)
-        await storage.createAdminSession(sessionToken, adminEmail, expiresAt);
-
-        // Find or create a real admin user in the database so they have a valid user ID
-        const adminName = process.env.ADMIN_USERNAME || "Admin";
-        const adminReferralCode = adminName.toLowerCase().replace(/[^a-z0-9]/g, '') || "admin";
-        let dbAdmin = await storage.getUserByEmail(adminEmail);
-        if (!dbAdmin) {
-          // Create admin user in database
-          dbAdmin = await storage.createUser({
-            email: adminEmail,
-            password: adminPassword, // Will be hashed by storage
-            name: adminName,
-            referralCode: adminReferralCode,
-            affiliateLink: adminReferralCode,
-          });
-          console.log(`[Admin Login] Created admin user in database: ${dbAdmin.id}`);
-        } else {
-          // Check if name needs updating (skip referral code to avoid conflicts)
-          if (dbAdmin.name !== adminName) {
-            try {
-              await storage.updateUser(dbAdmin.id, { name: adminName });
-              dbAdmin.name = adminName;
-              console.log(`[Admin Login] Updated admin name to: ${adminName}`);
-            } catch (err) {
-              console.log(`[Admin Login] Could not update admin name, continuing with existing data`);
-            }
-          }
-        }
-
-        const adminUser = {
-          id: dbAdmin.id, // Use real database ID
-          email: adminEmail,
-          name: dbAdmin.name || adminName,
-          isAdmin: true,
-          accountBalance: dbAdmin.accountBalance || 0,
-          referralBalance: dbAdmin.referralBalance || 0,
-          salesCount: dbAdmin.salesCount || 0,
-          subscriptionStatus: dbAdmin.subscriptionStatus || "active",
-          subdomain: dbAdmin.subdomain || null,
-          referralCode: dbAdmin.referralCode || adminReferralCode,
-        };
-        
-        // Set the user cookie (for frontend display)
-        res.cookie("user", JSON.stringify(adminUser), {
-          domain: ".rentapog.com",
-          path: "/",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-          httpOnly: false,
-          sameSite: "lax",
-        });
-        
-        // Set a SECURE httpOnly session token cookie (cannot be forged client-side)
-        res.cookie("admin_session", sessionToken, {
-          domain: ".rentapog.com",
-          path: "/",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-          httpOnly: true, // Cannot be read or modified by JavaScript
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-        });
-        
-        return res.json({ success: true, user: adminUser });
-      }
-
-      // Admin credentials don't match - record failed attempt
-      const ipAddress = req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
-      const failedResult = await storage.recordFailedAdminLogin(adminEmail || email, ipAddress);
-      const remainingAttempts = Math.max(0, 5 - failedResult.attemptCount);
-      
-      if (failedResult.lockedUntil) {
-        const remainingMs = new Date(failedResult.lockedUntil).getTime() - Date.now();
-        const remainingMins = Math.ceil(remainingMs / 60000);
-        console.log(`[Admin Login] Account locked after ${failedResult.attemptCount} failed attempts from ${ipAddress}`);
-        return res.status(423).json({ 
-          message: `Too many failed attempts. Account locked for ${remainingMins} minutes.`,
-          lockedUntil: failedResult.lockedUntil,
-          retryAfter: Math.ceil(remainingMs / 1000)
-        });
-      }
-      
-      console.log(`[Admin Login] Failed attempt ${failedResult.attemptCount}/5 from ${ipAddress}`);
-      return res.status(401).json({ 
-        message: `Invalid admin credentials. ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.` 
-      });
-    } catch (error) {
-      console.error("Admin login error:", error);
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  // Auto-login endpoint - logs user in after successful Stripe package purchase
-  app.get("/api/auth/auto-login", async (req, res) => {
-    try {
-      const { session_id } = req.query;
-      
-      if (!session_id || typeof session_id !== "string") {
-        console.log("[Auto-Login] Missing session_id");
-        return res.redirect("https://backend.rentapog.com?error=missing_session");
-      }
-
-      const stripe = new Stripe(process.env.STRIPE_API_KEY || "");
-      
-      // Retrieve the checkout session from Stripe
-      const session = await stripe.checkout.sessions.retrieve(session_id);
-      
-      if (session.payment_status !== "paid") {
-        console.log("[Auto-Login] Payment not completed");
-        return res.redirect("https://backend.rentapog.com?error=payment_not_completed");
-      }
-
-      // Get customer email and package info from Stripe session
-      const customerEmail = session.customer_email || session.customer_details?.email;
-      const packageAmount = session.amount_total || 0;
-      const packageId = session.metadata?.packageId;
-      const affiliateCode = session.metadata?.affiliateCode || "rentapog";
-      
-      // Determine which domain this payment came from
-      const baseDomain = session.success_url?.includes('airizzos.com') ? 'airizzos.com' : 'rentapog.com';
-      const backendUrl = baseDomain === 'airizzos.com' ? `https://${baseDomain}/backend` : 'https://backend.rentapog.com';
-      
-      if (!customerEmail) {
-        console.log("[Auto-Login] No customer email in session");
-        return res.redirect("https://backend.rentapog.com?error=no_email");
-      }
-
-      // Find user by email
-      let user = await storage.getUserByEmail(customerEmail);
-      
-      if (!user) {
-        // User doesn't exist yet - CREATE ACCOUNT NOW
-        console.log(`[Auto-Login] Creating new account for: ${customerEmail}`);
-        
-        // Get affiliate code from session metadata
+                  // --- Add Square and Anthropic endpoints here as needed ---
+                  // (Placeholder for payment and AI logic)
+                }
         const affiliateCode = session.metadata?.affiliateCode || "rentapog";
         
         // Generate random password
@@ -1748,40 +1207,36 @@ export async function registerRoutes(
 
       console.log(`[Sub-Admin] Created sub-admin: ${email} (${username}) by ${mainAdmin?.email || "admin"}`);
 
-      // Send welcome email with login credentials
+      // Send welcome email with login credentials using shared Resend instance
       try {
-        const { Resend } = await import("resend");
-        const resendApiKey = process.env.RESEND_API_KEY;
-        if (resendApiKey) {
-          const resend = new Resend(resendApiKey);
-          await resend.emails.send({
-            from: "RentAPog <support@rentapog.com>",
-            to: email,
-            subject: "Your RentAPog Sub-Admin Account is Ready!",
-            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #1e40af;">Welcome to RentAPog, ${name || username}!</h2>
-              <p style="font-size: 16px; color: #333;">Your sub-admin account has been created. Here are your login credentials:</p>
-              
-              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Password:</strong> ${password}</p>
-                <p><strong>PIN:</strong> ${pin}</p>
-                <p><strong>Your Affiliate Code:</strong> ${username}</p>
-              </div>
-              
-              <div style="background: #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-                <a href="https://backend.rentapog.com" style="display: inline-block; background: white; color: #10b981; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">Login Now</a>
-              </div>
-              
-              <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
-                <strong>Your Benefit:</strong>
-                <p>As a sub-admin, your 2nd sale commission goes to YOU instead of the main admin!</p>
-              </div>
-              
-              <p style="color: #666;">Your affiliate link: <strong>rentapog.com/?aff=${username}</strong></p>
-            </div>`,
-          });
+        const branding = getSiteBranding();
+        const emailResult = await sendEmail({
+          to: email,
+          subject: "Your RentAPog Sub-Admin Account is Ready!",
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #1e40af;">Welcome to ${branding.name}, ${name || username}!</h2>
+            <p style="font-size: 16px; color: #333;">Your sub-admin account has been created. Here are your login credentials:</p>
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Password:</strong> ${password}</p>
+              <p><strong>PIN:</strong> ${pin}</p>
+              <p><strong>Your Affiliate Code:</strong> ${username}</p>
+            </div>
+            <div style="background: #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <a href="https://backend.${branding.domain}" style="display: inline-block; background: white; color: #10b981; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">Login Now</a>
+            </div>
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+              <strong>Your Benefit:</strong>
+              <p>As a sub-admin, your 2nd sale commission goes to YOU instead of the main admin!</p>
+            </div>
+            <p style="color: #666;">Your affiliate link: <strong>${branding.domain}/?aff=${username}</strong></p>
+          </div>`,
+          text: `Welcome to ${branding.name}, ${name || username}!\n\nYour sub-admin account has been created.\nEmail: ${email}\nPassword: ${password}\nPIN: ${pin}\nAffiliate Code: ${username}\nLogin: https://backend.${branding.domain}\nBenefit: As a sub-admin, your 2nd sale commission goes to YOU instead of the main admin!\nAffiliate link: ${branding.domain}/?aff=${username}`
+        });
+        if (emailResult.success) {
           console.log(`[Sub-Admin] Welcome email sent to ${email}`);
+        } else {
+          console.error(`[Sub-Admin] Failed to send welcome email:`, emailResult.error);
         }
       } catch (emailErr) {
         console.error("[Sub-Admin] Failed to send welcome email:", emailErr);
