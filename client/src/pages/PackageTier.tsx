@@ -293,29 +293,31 @@ export default function PackageTier({ tierPrice }: PackageTierProps) {
   const handleBuyPackage = async (pkg: Package) => {
     setLoadingPackageId(pkg.id);
     try {
+      const email = window.prompt("Enter your email to continue:");
+      if (!email) {
+        setLoadingPackageId(null);
+        return;
+      }
       const apiUrl = `${getApiBaseUrl()}/api/payments/square/create-checkout`;
+      const payload = {
+        price: pkg.price,
+        email,
+        packageTitle: pkg.title,
+      };
       console.log("Making checkout request to:", apiUrl);
-      console.log("Package ID:", pkg.id, "Affiliate:", affiliateCode);
-      
+      console.log("Payload:", payload);
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageId: pkg.id,
-          affiliateCode,
-          hostname: window.location.hostname,
-        }),
+        body: JSON.stringify(payload),
       });
-      
       console.log("Response status:", response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Response error:", errorText);
         alert(`Error: ${response.status} - ${errorText || "Server error"}`);
         return;
       }
-      
       const data = await response.json();
       console.log("Response data:", data);
       

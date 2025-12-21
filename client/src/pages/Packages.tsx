@@ -259,18 +259,35 @@ export default function Packages() {
         setBuyLoading(null);
         return;
       }
+      const payload = { price: pkg.price, email, packageTitle: pkg.title };
+      // Log payload and types clearly
+      console.log("=== SQUARE CHECKOUT PAYLOAD ===");
+      console.log("Payload:", payload);
+      console.log("Types:", {
+        price: typeof payload.price,
+        email: typeof payload.email,
+        packageTitle: typeof payload.packageTitle
+      });
       const resp = await fetch(`${getApiBaseUrl()}/api/payments/square/create-checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ price: pkg.price, email, packageTitle: pkg.title })
+        body: JSON.stringify(payload)
       });
-      const data = await resp.json();
+      console.log("Response status:", resp.status);
+      let data;
+      try {
+        data = await resp.json();
+      } catch (e) {
+        data = { error: "Invalid JSON response" };
+      }
+      console.log("Response data:", data);
       if (data.url) {
         window.open(data.url, "_blank");
       } else {
         setBuyError(data.error || "Failed to create payment link.");
       }
     } catch (err) {
+      console.error("Checkout error:", err);
       setBuyError("Network error. Please try again.");
     } finally {
       setBuyLoading(null);
