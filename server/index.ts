@@ -45,12 +45,8 @@ app.use((req, res, next) => {
   ];
   const origin = req.headers.origin;
 
-  // Debug logging
-  if (req.path.includes('/api/packages/checkout')) {
-    console.log('[CORS] Request from origin:', origin);
-    console.log('[CORS] Method:', req.method);
-    console.log('[CORS] Is allowed?', origin && allowedOrigins.includes(origin));
-  }
+  // Global CORS debug logging
+  console.log('[CORS][ALL] Path:', req.path, '| Origin:', origin, '| Method:', req.method);
 
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -64,12 +60,23 @@ app.use((req, res, next) => {
     } else {
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     }
+    console.log('[CORS][ALL] Allowed origin:', origin);
+  } else {
+    if (origin) {
+      console.log('[CORS][ALL] Blocked origin:', origin);
+    }
   }
 
   if (req.method === 'OPTIONS') {
     // Always respond to preflight with headers
+    console.log('[CORS][ALL] Responding to OPTIONS preflight for', req.path);
     return res.status(200).end();
   }
+  next();
+});
+// Catch-all logger for any requests that fall through (diagnostic)
+app.use((req, res, next) => {
+  console.log('[CATCH-ALL] Unhandled request:', req.method, req.path, '| Origin:', req.headers.origin);
   next();
 });
 
