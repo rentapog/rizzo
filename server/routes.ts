@@ -31,290 +31,120 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
 
 // --- Main Route Registration ---
 export function registerRoutes(app: Express) {
-  // Send affiliate welcome email
-  app.post("/api/send-affiliate-email", async (req: Request, res: Response) => {
-    const { toEmail, affiliateCode, subject, html, text } = req.body;
-    if (!toEmail) return res.status(400).json({ error: "Missing toEmail" });
-    const branding = getSiteBranding();
-    const affCode = affiliateCode || "rentapog";
-    const defaultSubject = subject || `Welcome to ${branding.name}`;
-    const defaultHtml = html || `<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #1e40af;\">Welcome!</h2><p>Thank you for joining ${branding.name}. Your affiliate code is <b>${affCode}</b>.</p></div>`;
-    const defaultText = text || `Welcome! Thank you for joining ${branding.name}. Your affiliate code is ${affCode}.`;
-    const result = await sendEmail({
-      to: toEmail,
-      subject: defaultSubject,
-      html: defaultHtml,
-      text: defaultText,
-    });
-    if (result.success) {
-      return res.json({ success: true, id: result.id });
-    } else {
-      return res.status(500).json({ error: result.error || "Failed to send email" });
-    }
-  });
-
-  // Get current authenticated user from session
-  app.get("/api/auth/current", async (req: Request, res: Response) => {
+  // --- SQUARE PAYMENT ENDPOINT ---
+  app.post("/api/payments/square/create-checkout", async (req: Request, res: Response) => {
     try {
-      const userCookie = req.cookies?.user;
-      if (userCookie) {
+      const square = require('square');
+      const Client = square.Client;
+      const Environment = square.Environment;
+      const { price, email, packageTitle } = req.body;
+      const allowedPrices = [20,49,99,149,199,249,299,349,399,449,499];
+      if (!allowedPrices.includes(Number(price))) {
+        return res.status(400).json({ error: "Invalid package price" });
+      // --- SQUARE PAYMENT ENDPOINT ---
+      app.post("/api/payments/square/create-checkout", async (req: Request, res: Response) => {
         try {
-          const userData = JSON.parse(decodeURIComponent(userCookie));
-          if (userData && userData.id) {
-            const user = await storage.getUserById(userData.id);
-            if (user) {
-              return res.json({
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                referralCode: user.referralCode,
-                affiliateLink: user.affiliateLink,
-                accountBalance: user.accountBalance,
-                referralBalance: user.referralBalance,
-
-                import type { Express, Request, Response } from "express";
-                import { storage } from "./storage";
-                const { Resend } = require("resend");
-
-                // --- Helpers ---
-                function getSiteBranding() {
-                  return {
-                    name: process.env.SITE_NAME || "RentAPog",
-                    email: process.env.SITE_EMAIL || "support@rentapog.com",
-                    domain: process.env.SITE_DOMAIN || "rentapog.com",
-                  };
-                }
-
-                const resend = new Resend(process.env.RESEND_API_KEY);
-
-                async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
-                  try {
-                    const result = await resend.emails.send({
-                      from: `${getSiteBranding().name} <${getSiteBranding().email}>`,
-                      to,
-                      subject,
-                      html,
-                      text,
-                    });
-                    return { success: true, id: result.id };
-                  } catch (err: any) {
-                    return { success: false, error: err?.message || String(err) };
+          const square = require('square');
+          const Client = square.Client;
+          const Environment = square.Environment;
+          const { price, email, packageTitle } = req.body;
+          const allowedPrices = [20,49,99,149,199,249,299,349,399,449,499];
+          if (!allowedPrices.includes(Number(price))) {
+            return res.status(400).json({ error: "Invalid package price" });
+          }
+          const squareClient = new Client({
+            accessToken: process.env.SQUARE_ACCESS_TOKEN,
+            environment: Environment.Sandbox,
+          });
+          const { result: orderResult } = await squareClient.ordersApi.createOrder({
+            order: {
+              locationId: process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A",
+              lineItems: [
+                {
+                  name: packageTitle || `RentAPog Package $${price}`,
+                  quantity: "1",
+                  basePriceMoney: {
+                    amount: Number(price) * 100,
+                    currency: "AUD"
                   }
                 }
-
-                // --- Main Route Registration ---
-                export function registerRoutes(app: Express) {
-                  // Send affiliate welcome email
-                  app.post("/api/send-affiliate-email", async (req: Request, res: Response) => {
-                    const { toEmail, affiliateCode, subject, html, text } = req.body;
-                    if (!toEmail) return res.status(400).json({ error: "Missing toEmail" });
-                    const branding = getSiteBranding();
-                    const affCode = affiliateCode || "rentapog";
-                    const defaultSubject = subject || `Welcome to ${branding.name}`;
-                    const defaultHtml = html || `<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #1e40af;\">Welcome!</h2><p>Thank you for joining ${branding.name}. Your affiliate code is <b>${affCode}</b>.</p></div>`;
-                    const defaultText = text || `Welcome! Thank you for joining ${branding.name}. Your affiliate code is ${affCode}.`;
-                    const result = await sendEmail({
-                      to: toEmail,
-                      subject: defaultSubject,
-                      html: defaultHtml,
-                      text: defaultText,
-                    });
-                    if (result.success) {
-                      return res.json({ success: true, id: result.id });
-                    } else {
-                      return res.status(500).json({ error: result.error || "Failed to send email" });
-                    }
-                  });
-
-                  // Sender endpoint: send a custom email
-                  app.post("/api/send-email", async (req: Request, res: Response) => {
-                    const { to, subject, html, text } = req.body;
-                    if (!to || !subject || !html) {
-                      return res.status(400).json({ error: "Missing required fields" });
-                    }
-                    const result = await sendEmail({ to, subject, html, text: text || html.replace(/<[^>]+>/g, "") });
-                    if (result.success) {
-                      return res.json({ success: true, id: result.id });
-                    } else {
-                      return res.status(500).json({ error: result.error || "Failed to send email" });
-                    }
-                  });
-
-                  // Get current authenticated user from session
-                  app.get("/api/auth/current", async (req: Request, res: Response) => {
-                    try {
-                      const userCookie = req.cookies?.user;
-                      if (userCookie) {
-                        try {
-                          const userData = JSON.parse(decodeURIComponent(userCookie));
-                          if (userData && userData.id) {
-                            const user = await storage.getUserById(userData.id);
-                            if (user) {
-                              return res.json({
-                                id: user.id,
-                                email: user.email,
-                                name: user.name,
-                                referralCode: user.referralCode,
-                                affiliateLink: user.affiliateLink,
-                                accountBalance: user.accountBalance,
-                                referralBalance: user.referralBalance,
-                                salesCount: user.salesCount,
-                                subscriptionStatus: user.subscriptionStatus,
-                              });
-                            }
-                          }
-                        } catch (parseErr) {
-                          console.error("[Auth] Failed to parse user cookie:", parseErr);
-                        }
-                      }
-                      res.status(401).json({ message: "Not authenticated" });
-                    } catch (error) {
-                      console.error("[Auth] Get current user error:", error);
-                      res.status(500).json({ message: "Failed to get current user" });
-                    }
-                  });
-
-                  // Unsubscribe endpoint - cancels pending emails for the user
-                  app.get("/api/unsubscribe", async (req: Request, res: Response) => {
-                    try {
-                      const email = req.query.email as string;
-                      if (!email) {
-                        return res.status(400).send(`
-                          <html><head><title>Unsubscribe Error</title></head>
-                          <body style="font-family: Arial; text-align: center; padding: 50px;">
-                            <h1>Invalid Request</h1>
-                            <p>No email address provided.</p>
-                          </body></html>
-                        `);
-                      }
-                      await storage.cancelPendingEmailsByEmail(email);
-                      res.send(`
-                        <html>
-                        <head><title>Unsubscribed - ${getSiteBranding().name}</title></head>
-                        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8fafc;">
-                          <div style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            <h1>Unsubscribed</h1>
-                            <p>Your email has been removed from our list.</p>
-                          </div>
-                        </body></html>
-                      `);
-                    } catch (err) {
-                      res.status(500).send("Unsubscribe failed");
-                    }
-                  });
-
-                  // Homepage signup - just adds to email list (no account creation until package purchase)
-                  app.post("/api/affiliates/home-signup", async (req: Request, res: Response) => {
-                    try {
-                      const { email, name, referrerCode } = req.body;
-                      if (!email || !name) {
-                        return res.status(400).json({ error: "Email and name are required" });
-                      }
-                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                      if (!emailRegex.test(email)) {
-                        return res.status(400).json({ error: "Invalid email format" });
-                      }
-                      const existingLead = await storage.getEmailLeadByEmail(email);
-                      if (existingLead) {
-                        return res.status(400).json({ error: "Email already subscribed" });
-                      }
-                      await storage.createEmailLead({
-                        email,
-                        source: referrerCode ? `referral:${referrerCode}` : "homepage",
-                        affiliateLink: referrerCode || null,
-                        verified: false,
-                      });
-                      const packagesLink = referrerCode
-                        ? `https://packages.${getSiteBranding().domain}/?aff=${referrerCode}`
-                        : `https://packages.${getSiteBranding().domain}`;
-                      const branding = getSiteBranding();
-                      const emailResult = await sendEmail({
-                        to: email,
-                        subject: `Welcome to ${branding.name}`,
-                        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                          <h2 style="color: #1e40af;">Welcome, ${name}</h2>
-                          <p style="font-size: 16px; color: #333;">Thank you for subscribing. We're excited to have you on board.</p>
-                          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-                            <p style="margin: 0 0 15px 0; color: #1e40af; font-weight: bold;">Get Started with ${branding.name}</p>
-                            <p style="margin: 0 0 15px 0; color: #475569;">View our available packages and choose the option that works best for you.</p>
-                            <a href="${packagesLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 16px;">View Available Packages</a>
-                          </div>
-                          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <p style="margin: 0 0 10px 0; color: #1e40af; font-weight: bold;">Next Steps:</p>
-                            <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; line-height: 1.6;">
-                              <li>Review the package options available</li>
-                              <li>New members receive a 3-day trial period</li>
-                              <li>Login credentials will be sent after package selection</li>
-                              <li>Access your dashboard to manage your account</li>
-                            </ul>
-                          </div>
-                          <p style="color: #666; text-align: center; margin-top: 30px; font-size: 14px;">
-                            If you have questions, please contact our support team.
-                          </p>
-                          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-                            <p>${branding.name}</p>
-                          </div>
-                        </div>`,
-                        text: `Welcome, ${name}\n\nThank you for subscribing. We're excited to have you on board.\n\nGet Started with ${branding.name}\nView our available packages and choose the option that works best for you.\n\nView Available Packages: ${packagesLink}\n\nNext Steps:\n- Review the package options available\n- New members receive a 3-day trial period\n- Login credentials will be sent after package selection\n- Access your dashboard to manage your account\n\nIf you have questions, please contact our support team.\n\n${branding.name}`,
-                      });
-                      if (emailResult && emailResult.success) {
-                        console.log(`[Home Signup] ✓✓✓ Welcome email sent to ${email} via Resend`);
-                      } else {
-                        console.error(`[Home Signup] ✗✗✗ FAILED to send welcome email to ${email}`);
-                      }
-                      res.json({
-                        success: true,
-                        message: "Thanks for subscribing! Check your email for next steps.",
-                      });
-                    } catch (err: any) {
-                      res.status(500).json({ error: err?.message || "Signup failed" });
-                    }
-                  });
-
-                  // --- Add Square and Anthropic endpoints here as needed ---
-                  // (Placeholder for payment and AI logic)
-                }
-        const affiliateCode = session.metadata?.affiliateCode || "rentapog";
-        
-        // Generate random password
-        const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).toUpperCase().slice(-4);
-        const hashedPassword = await bcryptjs.hash(randomPassword, 10);
-        
-        // Generate unique referral code
-        const baseCode = customerEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-        let referralCode = baseCode;
-        let counter = 1;
-        while (await storage.getUserByReferralCode(referralCode)) {
-          referralCode = `${baseCode}${counter}`;
-          counter++;
+              ]
+            }
+          });
+          const { result: checkoutResult } = await squareClient.checkoutApi.createCheckout(
+            process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A",
+            {
+              order: { id: orderResult.order?.id },
+              askForShippingAddress: false,
+              merchantSupportEmail: process.env.SITE_EMAIL || "sales@rentapog.com",
+              prePopulateBuyerEmail: email,
+              redirectUrl: "https://packages.rentapog.com/payment-success"
+            }
+          );
+          res.json({ url: checkoutResult.checkout?.checkoutPageUrl });
+        } catch (error) {
+          console.error("[Square] Error creating checkout:", error);
+          res.status(500).json({ error: "Failed to create Square checkout" });
         }
-        
-        // Create the user account
-        user = await storage.createUser({
-          email: customerEmail,
-          name: customerEmail.split('@')[0],
-          username: referralCode, // Set username to referralCode (affiliate link)
-          password: hashedPassword,
-          referralCode,
-          affiliateLink: affiliateCode,
-          isActive: true,
-          packagePurchased: packageAmount,
+      });
+
+      // Send affiliate welcome email
+      app.post("/api/send-affiliate-email", async (req: Request, res: Response) => {
+        const { toEmail, affiliateCode, subject, html, text } = req.body;
+        if (!toEmail) return res.status(400).json({ error: "Missing toEmail" });
+        const branding = getSiteBranding();
+        const affCode = affiliateCode || "rentapog";
+        const defaultSubject = subject || `Welcome to ${branding.name}`;
+        const defaultHtml = html || `<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #1e40af;\">Welcome!</h2><p>Thank you for joining ${branding.name}. Your affiliate code is <b>${affCode}</b>.</p></div>`;
+        const defaultText = text || `Welcome! Thank you for joining ${branding.name}. Your affiliate code is ${affCode}.`;
+        const result = await sendEmail({
+          to: toEmail,
+          subject: defaultSubject,
+          html: defaultHtml,
+          text: defaultText,
         });
-        
-        console.log(`✓ [Auto-Login] Account created for ${customerEmail} | Code: ${referralCode}`);
-        
-        // Always send welcome email with login credentials (even if user already exists, e.g. retry)
-        const siteBranding = getSiteBranding();
-        await sendEmail({
-          to: customerEmail,
-          subject: `Welcome to ${siteBranding.name} - Your Account Details`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #2563eb;">Welcome to ${siteBranding.name}!</h2>
-              <p>Your account has been created. Here are your login credentials:</p>
-              
-              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-                <p style="margin: 5px 0;"><strong>Email:</strong> ${customerEmail}</p>
+        if (result.success) {
+          return res.json({ success: true, id: result.id });
+        } else {
+          return res.status(500).json({ error: result.error || "Failed to send email" });
+        }
+      });
+
+      // Get current authenticated user from session
+      app.get("/api/auth/current", async (req: Request, res: Response) => {
+        try {
+          const userCookie = req.cookies?.user;
+          if (userCookie) {
+            try {
+              const userData = JSON.parse(decodeURIComponent(userCookie));
+              if (userData && userData.id) {
+                const user = await storage.getUserById(userData.id);
+                if (user) {
+                  return res.json({
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    referralCode: user.referralCode,
+                    affiliateLink: user.affiliateLink,
+                    accountBalance: user.accountBalance,
+                    referralBalance: user.referralBalance,
+                    salesCount: user.salesCount,
+                    subscriptionStatus: user.subscriptionStatus,
+                  });
+                }
+              }
+            } catch (parseErr) {
+              console.error("[Auth] Failed to parse user cookie:", parseErr);
+            }
+          }
+          res.status(401).json({ message: "Not authenticated" });
+        } catch (error) {
+          console.error("[Auth] Get current user error:", error);
+          res.status(500).json({ message: "Failed to get current user" });
+        }
+      });
+    }
+    }
                 <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: white; padding: 2px 8px; border-radius: 4px;">${randomPassword}</code></p>
                 <p style="margin: 5px 0;"><strong>Username (Affiliate Link):</strong> ${referralCode}</p>
               </div>
@@ -4484,88 +4314,6 @@ export default function ${componentName}() {
         return res.status(500).json({ error: "Stripe publishable key not found" });
       }
 
-      // Get Stripe Connect Client ID
-      const connectClientId = process.env.STRIPE_CONNECT_CLIENT_ID?.trim();
-      if (!connectClientId) {
-        return res.status(500).json({ error: "Stripe Connect Client ID not configured" });
-      }
-
-      // Build proper OAuth URL that redirects back to our callback
-      const state = Buffer.from(JSON.stringify({ userId: user.id })).toString("base64");
-      const redirectUri = "https://rentapog.com/stripe-callback";
-      
-      const connectUrl = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${connectClientId}&scope=read_write&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
-      
-      res.json({ url: connectUrl });
-    } catch (error) {
-      console.error("Stripe Connect URL error:", error);
-      res.status(500).json({ error: "Failed to generate Stripe Connect URL" });
-    }
-  });
-
-  // Stripe Connect callback handler
-  app.get("/stripe-callback", async (req, res) => {
-    try {
-      const { code, state, error } = req.query;
-      
-      if (error) {
-        return res.redirect(`https://backend.rentapog.com/?error=${encodeURIComponent(error as string)}`);
-      }
-
-      if (!code || !state) {
-        return res.redirect(`https://backend.rentapog.com/?error=${encodeURIComponent("Missing authorization code")}`);
-      }
-
-      // Decode state to get userId
-      let userId: string;
-      try {
-        const stateData = JSON.parse(Buffer.from(state as string, "base64").toString());
-        userId = stateData.userId;
-      } catch {
-        return res.redirect(`https://backend.rentapog.com/?error=${encodeURIComponent("Invalid state parameter")}`);
-      }
-
-      // Exchange code for Stripe access token
-      const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-      const xReplitToken = process.env.REPL_IDENTITY
-        ? 'repl ' + process.env.REPL_IDENTITY
-        : process.env.WEB_REPL_RENEWAL
-          ? 'depl ' + process.env.WEB_REPL_RENEWAL
-          : null;
-
-      if (!xReplitToken || !hostname) {
-        return res.redirect(`https://backend.rentapog.com/?error=${encodeURIComponent("Stripe not configured")}`);
-      }
-
-      // Get Stripe Connect Client ID and API Key from environment
-      const connectClientId = process.env.STRIPE_CONNECT_CLIENT_ID?.trim();
-      const stripeSecretKey = process.env.STRIPE_API_KEY?.trim();
-      
-      if (!connectClientId) {
-        return res.redirect(`https://backend.rentapog.com/?error=${encodeURIComponent("Stripe Connect Client ID not configured")}`);
-      }
-      
-      if (!stripeSecretKey) {
-        return res.redirect(`https://backend.rentapog.com/?error=${encodeURIComponent("Stripe API Key not configured")}`);
-      }
-
-      // Exchange code for access token with Stripe
-      const tokenResponse = await fetch("https://connect.stripe.com/oauth/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: connectClientId,
-          code: code as string,
-          client_secret: stripeSecretKey,
-          grant_type: "authorization_code",
-        }).toString(),
-      });
-
-      const tokenData = await tokenResponse.json();
-
-      if (tokenData.error) {
-        return res.redirect(`https://backend.rentapog.com/?error=${encodeURIComponent(tokenData.error_description || tokenData.error)}`);
-      }
 
       // Store the Stripe account ID (stripe_user_id) in user record
       if (tokenData.stripe_user_id) {
