@@ -210,8 +210,12 @@ async function processChargeWithReferralBalance(userId: string, chargeAmount: nu
 
 export async function registerRoutes(
     // Explicit OPTIONS handler for CORS preflight on /api/packages/checkout
-    app.options("/api/packages/checkout", (req, res) => {
-      res.sendStatus(200);
+    app.use("/api/packages/checkout", (req, res, next) => {
+      if (req.method === "OPTIONS") {
+        res.sendStatus(200);
+      } else {
+        next();
+      }
     });
   httpServer: Server,
   app: Express
