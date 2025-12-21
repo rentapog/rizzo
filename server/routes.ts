@@ -216,9 +216,12 @@ export async function registerRoutes(
   app.post("/api/payments/square/create-checkout", async (req, res) => {
     try {
       const { price, email, packageTitle } = req.body;
+      // Debug log for price value and type
+      console.log("[Square Checkout] Received price:", price, "Type:", typeof price);
       // Validate price is one of the allowed packages
       const allowedPrices = [20,49,99,149,199,249,299,349,399,449,499];
       if (!allowedPrices.includes(Number(price))) {
+        console.log("[Square Checkout] Invalid price after Number():", Number(price), "Allowed:", allowedPrices);
         return res.status(400).json({ error: "Invalid package price" });
       }
       // Set up Square client
