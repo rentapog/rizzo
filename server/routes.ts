@@ -4606,6 +4606,7 @@ Guidelines:
         headers: {
           "x-api-key": apiKey,
           "content-type": "application/json",
+          "anthropic-version": "2023-06-01"
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-5",
