@@ -1,3 +1,7 @@
+// Explicit OPTIONS handler for /api/packages/checkout to support CORS preflight
+app.options('/api/packages/checkout', (req, res) => {
+  res.sendStatus(204);
+});
 // Load environment variables from .env before anything else
 import dotenv from "dotenv";
 dotenv.config();
