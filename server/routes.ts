@@ -102,6 +102,7 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import bcryptjs from "bcryptjs";
 import Stripe from "stripe";
+import { Client, Environment } from "square";
 import Anthropic from "@anthropic-ai/sdk";
 import { registerTeamAndDeploymentRoutes } from "./routes-team-deployment";
 import { registerWebsiteBuilderRoutes } from "./routes-website-builder";
@@ -211,6 +212,53 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // --- SQUARE PAYMENT ENDPOINT ---
+  app.post("/api/payments/square/create-checkout", async (req, res) => {
+    try {
+      const { price, email, packageTitle } = req.body;
+      // Validate price is one of the allowed packages
+      const allowedPrices = [20,49,99,149,199,249,299,349,399,449,499];
+      if (!allowedPrices.includes(Number(price))) {
+        return res.status(400).json({ error: "Invalid package price" });
+      }
+      // Set up Square client
+      const squareClient = new Client({
+        accessToken: process.env.SQUARE_ACCESS_TOKEN,
+        environment: Environment.Sandbox,
+      });
+      // Create order
+      const { result: orderResult } = await squareClient.ordersApi.createOrder({
+        order: {
+          locationId: process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A", // Replace with your real location ID
+          lineItems: [
+            {
+              name: packageTitle || `RentAPog Package $${price}`,
+              quantity: "1",
+              basePriceMoney: {
+                amount: Number(price) * 100, // cents
+                currency: "AUD"
+              }
+            }
+          ]
+        }
+      });
+      // Create checkout link
+      const { result: checkoutResult } = await squareClient.checkoutApi.createCheckout(
+        process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A",
+        {
+          order: { id: orderResult.order?.id },
+          askForShippingAddress: false,
+          merchantSupportEmail: process.env.SITE_EMAIL || "sales@rentapog.com",
+          prePopulateBuyerEmail: email,
+          redirectUrl: "https://backend.rentapog.com/payment-success"
+        }
+      );
+      res.json({ url: checkoutResult.checkout?.checkoutPageUrl });
+    } catch (error) {
+      console.error("[Square] Error creating checkout:", error);
+      res.status(500).json({ error: "Failed to create Square checkout" });
+    }
+  });
   // Redirect sales.rentapog.com to packages.rentapog.com
   app.use((req, res, next) => {
     const host = req.get('host') || '';

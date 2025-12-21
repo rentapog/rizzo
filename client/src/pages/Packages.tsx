@@ -14,13 +14,7 @@ interface Package {
   features: string[];
 }
 
-const packageLinks: { [price: number]: string } = {
-  20: "https://buy.stripe.com/test_fZu28q2QKeD7fYcghygA800",
-  49: "https://buy.stripe.com/test_3cIdR8770fHb8vK6GYgA802",
-  99: "https://buy.stripe.com/test_9B63cu1MGdz313i4yQgA805",
-  149: "https://buy.stripe.com/test_dRmfZg9f80Mh6nCaXegA806",
-  249: "https://buy.stripe.com/test_fZu4gy770eD76nCc1igA807",
-};
+
 
 const packages: Package[] = [
   {
@@ -252,12 +246,34 @@ export default function Packages() {
   }, [affiliateCode]);
 
 
-  const handleBuyPackage = (pkg: Package) => {
-    const link = packageLinks[pkg.price];
-    if (link) {
-      window.open(link, "_blank");
-    } else {
-      alert("No payment link available for this package.");
+  const [buyLoading, setBuyLoading] = useState<number | null>(null);
+  const [buyError, setBuyError] = useState<string>("");
+
+  const handleBuyPackage = async (pkg: Package) => {
+    setBuyLoading(pkg.id);
+    setBuyError("");
+    try {
+      // Prompt for email (or use logged-in user in real flow)
+      const email = window.prompt("Enter your email to continue:");
+      if (!email) {
+        setBuyLoading(null);
+        return;
+      }
+      const resp = await fetch(`${getApiBaseUrl()}/api/payments/square/create-checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price: pkg.price, email, packageTitle: pkg.title })
+      });
+      const data = await resp.json();
+      if (data.url) {
+        window.open(data.url, "_blank");
+      } else {
+        setBuyError(data.error || "Failed to create payment link.");
+      }
+    } catch (err) {
+      setBuyError("Network error. Please try again.");
+    } finally {
+      setBuyLoading(null);
     }
   };
 
@@ -366,22 +382,25 @@ export default function Packages() {
               <button
                 onClick={() => handleBuyPackage(pkg)}
                 style={{
-                  background: packageLinks[pkg.price] ? "#0033a0" : "#6680c0",
+                  background: "#0033a0",
                   color: "#fff",
                   border: "none",
                   borderRadius: "6px",
                   padding: "12px 28px",
                   fontSize: "1.1em",
                   fontWeight: "bold",
-                  cursor: packageLinks[pkg.price] ? "pointer" : "not-allowed",
+                  cursor: buyLoading === pkg.id ? "wait" : "pointer",
                   display: "inline-block",
                   marginTop: "10px",
-                  opacity: packageLinks[pkg.price] ? 1 : 0.6,
+                  opacity: buyLoading === pkg.id ? 0.6 : 1,
                 }}
-                disabled={!packageLinks[pkg.price]}
+                disabled={!!buyLoading}
               >
-                {packageLinks[pkg.price] ? "Pay with Stripe (Test)" : "Not Available"}
+                {buyLoading === pkg.id ? "Redirecting..." : "Pay with Card (Square)"}
               </button>
+              {buyError && (
+                <div style={{ color: "#e60000", marginTop: 8, fontSize: "0.95em" }}>{buyError}</div>
+              )}
             </div>
           ))}
         </div>
