@@ -44,21 +44,30 @@ app.use((req, res, next) => {
     'https://packages.airizzos.com'
   ];
   const origin = req.headers.origin;
-  
+
   // Debug logging
   if (req.path.includes('/api/packages/checkout')) {
     console.log('[CORS] Request from origin:', origin);
     console.log('[CORS] Method:', req.method);
     console.log('[CORS] Is allowed?', origin && allowedOrigins.includes(origin));
   }
-  
+
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    // Echo requested headers or allow common ones
+    const reqHeaders = req.headers['access-control-request-headers'];
+    if (reqHeaders) {
+      res.setHeader('Access-Control-Allow-Headers', reqHeaders);
+    } else {
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    }
   }
+
   if (req.method === 'OPTIONS') {
+    // Always respond to preflight with headers
     return res.status(200).end();
   }
   next();
