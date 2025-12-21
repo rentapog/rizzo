@@ -103,6 +103,7 @@ import { z } from "zod";
 import bcryptjs from "bcryptjs";
 import Stripe from "stripe";
 import { Client, Environment } from "square";
+console.log("Square Environment object:", Environment);
 import Anthropic from "@anthropic-ai/sdk";
 import { registerTeamAndDeploymentRoutes } from "./routes-team-deployment";
 import { registerWebsiteBuilderRoutes } from "./routes-website-builder";
