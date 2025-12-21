@@ -209,17 +209,17 @@ async function processChargeWithReferralBalance(userId: string, chargeAmount: nu
 }
 
 export async function registerRoutes(
-    // Explicit OPTIONS handler for CORS preflight on /api/packages/checkout
-    app.all("/api/packages/checkout", (req, res, next) => {
-      if (req.method === "OPTIONS") {
-        res.sendStatus(200);
-        return;
-      }
-      next();
-    });
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Explicit OPTIONS handler for CORS preflight on /api/packages/checkout
+  app.all("/api/packages/checkout", (req, res, next) => {
+    if (req.method === "OPTIONS") {
+      res.sendStatus(200);
+      return;
+    }
+    next();
+  });
   // --- SQUARE PAYMENT ENDPOINT ---
   app.post("/api/payments/square/create-checkout", async (req, res) => {
     try {
