@@ -213,9 +213,9 @@ export async function registerRoutes(
     app.all("/api/packages/checkout", (req, res, next) => {
       if (req.method === "OPTIONS") {
         res.sendStatus(200);
-      } else {
-        next();
+        return;
       }
+      next();
     });
   httpServer: Server,
   app: Express
