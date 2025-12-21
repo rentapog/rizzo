@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, TrendingUp, Users, DollarSign, Zap, Shield, ArrowRight, Mail } from "lucide-react";
 import { Link } from "wouter";

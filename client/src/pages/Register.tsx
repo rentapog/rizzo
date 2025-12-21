@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Mail, Lock, User, AlertCircle, Link as LinkIcon, MapPin } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 
 const COUNTRIES = ["United States", "Canada", "Australia", "United Kingdom", "India", "Mexico", "Germany", "France", "Japan", "China", "Brazil", "Spain", "Italy", "Netherlands", "South Korea", "Switzerland", "Sweden", "Norway", "Denmark", "Belgium", "Austria", "Ireland", "New Zealand", "Singapore", "Hong Kong", "UAE", "Saudi Arabia", "Qatar", "South Africa", "Nigeria", "Kenya"];
 

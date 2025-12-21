@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Check, Globe, Zap, Users, TrendingUp, Shield, DollarSign, Mail, Sparkles } from "lucide-react";
 
 export default function Features() {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Bell, X, DollarSign, UserPlus, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 
 interface Notification {
   id: string;

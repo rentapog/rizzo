@@ -2,55 +2,56 @@ import { Switch, Route } from "wouter";
 import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import CheckEmailInstructions from "@/pages/check-email-instructions";
-import Layout from "@/components/Layout";
-import Home from "@/pages/Home";
-import Affiliate from "@/pages/Affiliate";
-import Dashboard from "@/pages/Dashboard";
-import Legal from "@/pages/Legal";
-import Privacy from "@/pages/Privacy";
-import Terms from "@/pages/Terms";
-import Pricing from "@/pages/Pricing";
-import Refund from "@/pages/Refund";
-import Features from "@/pages/Features";
-import HowItWorks from "@/pages/HowItWorks";
-import DomainRental from "@/pages/DomainRental";
-import Sales from "@/pages/Sales";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import AdminLogin from "@/pages/AdminLogin";
-import AdminDashboard from "@/pages/AdminDashboard";
-import AdminPackages from "@/pages/AdminPackages";
-import AdminSetup from "@/pages/AdminSetup";
-import PaymentSuccess from "@/pages/PaymentSuccess";
-import PaymentCancel from "@/pages/PaymentCancel";
-import DomainControlPanel from "@/pages/DomainControlPanel";
-import DomainRegistry from "@/pages/DomainRegistry";
-import DomainRegistration from "@/pages/DomainRegistration";
-import DomainRegistrationSuccess from "@/pages/DomainRegistrationSuccess";
-import Backoffice from "@/pages/Backoffice";
-import UserBackend from "@/pages/UserBackend";
-import BackendLogin from "@/pages/BackendLogin";
-import ResetPassword from "@/pages/ResetPassword";
-import Packages from "@/pages/Packages";
-import PackageTier from "@/pages/PackageTier";
-import BrandedAffiliate from "@/pages/BrandedAffiliate";
-import BrandedBlog from "@/pages/BrandedBlog";
-import BrandedBlogPost from "@/pages/BrandedBlogPost";
-import BrandedContact from "@/pages/BrandedContact";
-import BrandedFeatures from "@/pages/BrandedFeatures";
-import BrandedFAQ from "@/pages/BrandedFAQ";
-import MarketingGuides from "@/pages/MarketingGuides";
-import CoeyChat from "@/pages/CoeyChat";
-import Blog from "@/pages/Blog";
-import BlogPost from "@/pages/BlogPost";
-import DomainEducation from "@/pages/DomainEducation";
-import SubAdminDashboard from "@/pages/SubAdminDashboard";
-import SubAdminLogin from "@/pages/SubAdminLogin";
-import BrandedFranchise from "@/pages/BrandedFranchise";
+import { Toaster } from "./components/ui/toaster";
+import { TooltipProvider } from "./components/ui/tooltip";
+import NotFound from "./pages/not-found";
+import CheckEmailInstructions from "./pages/check-email-instructions";
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import Affiliate from "./pages/Affiliate";
+import Dashboard from "./pages/Dashboard";
+import Legal from "./pages/Legal";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Pricing from "./pages/Pricing";
+import RefundPolicy from "./pages/RefundPolicy";
+  <Route path="/refund-policy">{() => <RefundPolicy />}</Route>
+import Features from "./pages/Features";
+import HowItWorks from "./pages/HowItWorks";
+import DomainRental from "./pages/DomainRental";
+import Sales from "./pages/Sales";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminPackages from "./pages/AdminPackages";
+import AdminSetup from "./pages/AdminSetup";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
+import DomainControlPanel from "./pages/DomainControlPanel";
+import DomainRegistry from "./pages/DomainRegistry";
+import DomainRegistration from "./pages/DomainRegistration";
+import DomainRegistrationSuccess from "./pages/DomainRegistrationSuccess";
+import Backoffice from "./pages/Backoffice";
+import UserBackend from "./pages/UserBackend";
+import BackendLogin from "./pages/BackendLogin";
+import ResetPassword from "./pages/ResetPassword";
+import Packages from "./pages/Packages";
+import PackageTier from "./pages/PackageTier";
+import BrandedAffiliate from "./pages/BrandedAffiliate";
+import BrandedBlog from "./pages/BrandedBlog";
+import BrandedBlogPost from "./pages/BrandedBlogPost";
+import BrandedContact from "./pages/BrandedContact";
+import BrandedFeatures from "./pages/BrandedFeatures";
+import BrandedFAQ from "./pages/BrandedFAQ";
+import MarketingGuides from "./pages/MarketingGuides";
+import CoeyChat from "./pages/CoeyChat";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import DomainEducation from "./pages/DomainEducation";
+import SubAdminDashboard from "./pages/SubAdminDashboard";
+import SubAdminLogin from "./pages/SubAdminLogin";
+import BrandedFranchise from "./pages/BrandedFranchise";
 
 function Router() {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
@@ -204,6 +205,7 @@ function Router() {
       <Route path="/terms">{() => <Terms />}</Route>
       <Route path="/pricing">{() => <Pricing />}</Route>
       <Route path="/refund">{() => <Refund />}</Route>
+      <Route path="/refund-policy">{() => <RefundPolicy />}</Route>
       <Route path="/features">{() => <Features />}</Route>
       <Route path="/how-it-works">{() => <HowItWorks />}</Route>
       <Route path="/howitworks">{() => <HowItWorks />}</Route>
