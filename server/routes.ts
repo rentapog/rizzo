@@ -2,7 +2,7 @@
 import type { Express, Request, Response } from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
-const { Resend } = require('resend');
+import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Helper: Get site branding
@@ -46,9 +46,7 @@ export async function registerRoutes(
   // --- SQUARE PAYMENT ENDPOINT ---
   app.post("/api/payments/square/create-checkout", async (req, res) => {
     try {
-      const square = require('square');
-      const Client = square.Client;
-      const Environment = square.Environment;
+      const { Client, Environment } = await import('square');
       const { price, email, packageTitle } = req.body;
       const allowedPrices = [20,49,99,149,199,249,299,349,399,449,499];
       if (!allowedPrices.includes(Number(price))) {
@@ -123,7 +121,7 @@ export async function registerRoutes(
       const { prompt } = req.body;
       if (!prompt) return res.status(400).json({ error: "Missing prompt" });
       // Example: Use Anthropic Claude API (replace with your actual logic)
-      const Anthropic = require("@anthropic-ai/sdk");
+      const { default: Anthropic } = await import("@anthropic-ai/sdk");
       const anthropic = new Anthropic({ apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY });
       const completion = await anthropic.completions.create({
         model: "claude-3-opus-20240229",
@@ -168,7 +166,7 @@ export async function registerRoutes(
       // Generate referral code
       const referralCode = Math.random().toString(36).substring(2, 10);
       // Hash password (bcryptjs)
-      const bcrypt = require('bcryptjs');
+      const bcrypt = await import('bcryptjs');
       const hashed = await bcrypt.hash(password, 10);
       const user = await storage.createUser({
         email,
