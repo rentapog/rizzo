@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
-import { registerRoutes, registerAdminClearLeadsRoute, registerAdminClearUsersRoute, registerAWeberOAuthRoutes, registerMailgunEmailRoute } from "./routes";
+import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startEmailWorker } from "./emailWorker";
@@ -12,16 +12,7 @@ import { storage } from "./storage";
 import { notificationService } from "./websocket";
 
 const app = express();
-// Register Mailgun email API route (for frontend to trigger emails)
-registerMailgunEmailRoute(app);
-// Register AWeber OAuth routes
-registerAWeberOAuthRoutes(app);
-// Register temporary admin clear leads route
-import { db } from "./db";
-import { emailLeads } from "@shared/schema";
-registerAdminClearLeadsRoute(app, db, emailLeads);
-// Register admin clear users route (delete all users and email leads)
-registerAdminClearUsersRoute(app);
+
 
 // CORS middleware for cross-origin requests from packages.rentapog.com
 app.use((req, res, next) => {
@@ -226,7 +217,7 @@ app.use((req, res, next) => {
 
 
 // Register main API routes BEFORE static/catch-all middleware
-registerRoutes(httpServer, app);
+registerRoutes(app);
 
 // Initialize WebSocket notification service
 notificationService.initialize(httpServer);
