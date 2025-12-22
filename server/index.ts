@@ -217,7 +217,7 @@ app.use((req, res, next) => {
 
 
 // Register main API routes BEFORE static/catch-all middleware
-registerRoutes(app);
+registerRoutes(httpServer, app);
 
 // Initialize WebSocket notification service
 notificationService.initialize(httpServer);
