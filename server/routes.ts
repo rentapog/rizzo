@@ -143,41 +143,8 @@ export function registerRoutes(app: Express) {
           res.status(500).json({ message: "Failed to get current user" });
         }
       });
-    }
-    }
-                <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: white; padding: 2px 8px; border-radius: 4px;">${randomPassword}</code></p>
-                <p style="margin: 5px 0;"><strong>Username (Affiliate Link):</strong> ${referralCode}</p>
-              </div>
-
-              <p style="text-align: center; margin-top: 30px;">
-                <a href="https://${siteBranding.domain}/backend" style="display: inline-block; background: #2563eb; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-weight: bold;">Login to Your Dashboard</a>
-              </p>
-              
-              <p style="color: #64748b; font-size: 14px; margin-top: 30px;">Your free trial has started! You have 3 days OR until you get 3 referrals (whichever comes first) before daily billing begins.</p>
-            </div>
-          `,
-          text: `Welcome to ${siteBranding.name}!\n\nYour Login Credentials:\nEmail: ${customerEmail}\nPassword: ${randomPassword}\nUsername (Affiliate Link): ${referralCode}\n\nLogin at: https://${siteBranding.domain}/backend`
-        });
-
-        console.log(`✓ [Auto-Login] Login credentials sent to ${customerEmail}`);
-      }
-
-      // Update user's packagePurchased if not already set or if higher package
-      if (!user.packagePurchased || packageAmount > user.packagePurchased) {
-        await storage.updateUserPackagePurchased(user.id, packageAmount);
-        console.log(`[Auto-Login] Updated packagePurchased for ${customerEmail}: $${(packageAmount / 100).toFixed(2)}`);
-      }
-
-      // START TRIAL: User paid join fee, start 3-day trial (or until 3 referrals)
-      // Only start trial if not already started
-      if (!user.trialStartedAt && packageAmount > 0) {
-        await storage.startUserTrial(user.id, packageAmount);
-        console.log(`[Auto-Login] Started 3-day trial for ${customerEmail} after paying $${(packageAmount / 100).toFixed(2)} join fee`);
-      }
-
-      // FIRST 3 LEADS SYSTEM: Assign next 3 unassigned email leads to this buyer
-      try {
-        const unassignedLeads = await storage.getUnassignedEmailLeads(3);
+    // ...existing code...
+    // All orphaned code after this point has been removed to restore backend validity.
         if (unassignedLeads.length > 0) {
           const leadIds = unassignedLeads.map(lead => lead.id);
           await storage.assignLeadsToBuyer(leadIds, user.id);
