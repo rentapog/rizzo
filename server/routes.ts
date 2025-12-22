@@ -158,6 +158,73 @@ export async function registerRoutes(
     }
   });
 
+  // --- USER REGISTRATION ENDPOINT ---
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password, name, address, city, state, zip, country, referredBy } = req.body;
+      if (!email || !password) return res.status(400).json({ error: "Missing email or password" });
+      const existing = await storage.getUserByEmail(email);
+      if (existing) return res.status(400).json({ error: "Email already registered" });
+      // Generate referral code
+      const referralCode = Math.random().toString(36).substring(2, 10);
+      // Hash password (bcryptjs)
+      const bcrypt = require('bcryptjs');
+      const hashed = await bcrypt.hash(password, 10);
+      const user = await storage.createUser({
+        email,
+        password: hashed,
+        name,
+        address,
+        city,
+        state,
+        zip,
+        country,
+        referralCode,
+        referredBy: referredBy || null,
+        affiliateLink: referredBy || "admin",
+      });
+      // Send welcome email
+      const branding = getSiteBranding();
+      await sendEmail({
+        to: email,
+        subject: `Welcome to ${branding.name}`,
+        html: `<h2>Welcome to ${branding.name}!</h2><p>Your account has been created.</p>`,
+        text: `Welcome to ${branding.name}! Your account has been created.`,
+      });
+      res.json({ success: true, user: { id: user.id, email: user.email, referralCode: user.referralCode } });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  // --- AFFILIATE HOMEPAGE SIGNUP ENDPOINT ---
+  app.post("/api/affiliates/home-signup", async (req, res) => {
+    try {
+      const { email, affiliateLink } = req.body;
+      if (!email) return res.status(400).json({ error: "Missing email" });
+      const existing = await storage.getEmailLeadByEmail(email);
+      if (existing) return res.status(400).json({ error: "Email already signed up" });
+      const lead = await storage.createEmailLead({
+        email,
+        source: "homepage",
+        affiliateLink: affiliateLink || "admin",
+        assignedAffiliate: affiliateLink || "admin",
+        verified: false,
+      });
+      // Send welcome email
+      const branding = getSiteBranding();
+      await sendEmail({
+        to: email,
+        subject: `Welcome to ${branding.name}`,
+        html: `<h2>Welcome to ${branding.name}!</h2><p>Thanks for signing up as an affiliate.</p>`,
+        text: `Welcome to ${branding.name}! Thanks for signing up as an affiliate.`,
+      });
+      res.json({ success: true, lead: { id: lead.id, email: lead.email } });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
   // Add more endpoints as needed...
 
   return httpServer;
