@@ -25,6 +25,12 @@ function getPlainTextFooter(email: string): string {
   return `\n\n---\nRentAPog - Daily Domain Rental Platform\nUnsubscribe: https://packages.rentapog.com/unsubscribe?email=${encodeURIComponent(email)}\nYou're receiving this because you signed up at packages.rentapog.com`;
 }
 
+// Helper to extract username from email
+function getUsernameFromEmail(email: string): string {
+  if (!email) return '';
+  return email.split('@')[0];
+}
+
 const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: string, email?: string, paymentLink?: string) => { subject: string; html: string; text: string } } = {
     paymentTest: (code, subdomain, email = '', paymentLink = 'https://buy.stripe.com/test_fZu28q2QKeD7fYcghygA800') => {
       // You can pass a custom test payment link, or use the default test link
@@ -43,27 +49,28 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
       };
     },
   day0: (code, subdomain, email = '') => {
-    // Always link to whitelist instructions page for first email
-    const whitelistUrl = `https://rentapog.com/whitelist-email?aff=${code}`;
+    // Use username as affiliate code in the link
+    const username = getUsernameFromEmail(email);
+    const affLink = `https://packages.rentapog.com/?aff=${username}`;
     return {
-      subject: "Your Unique Affiliate Link Inside",
+      subject: "Welcome to RentAPog!",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #1e40af;">Welcome to RentAPog!</h2>
-        <p>Your affiliate link is ready to start earning commissions, but first:</p>
-        <p style="background: #fef9c3; padding: 15px; border-radius: 8px; text-align: center;">
-          <a href="${whitelistUrl}" style="color: #b45309; font-size: 18px; font-weight: bold; text-decoration: underline;">Click here to learn how to whitelist our emails</a>
+        <p>Thanks for signing up as an affiliate.</p>
+        <p style="margin-top: 18px;">Your unique affiliate link:</p>
+        <p style="background: #f0f9ff; padding: 15px; border-radius: 8px; text-align: center;">
+          <a href="${affLink}" style="color: #2563eb; font-size: 18px; font-weight: bold; text-decoration: underline;">${affLink}</a>
         </p>
-        <p style="margin-top: 18px;">This ensures you get all your commission notifications and important updates.</p>
-        <p>After whitelisting, you'll find your affiliate link and next steps on that page.</p>
+        <p style="margin-top: 18px;">Share this link to start earning commissions!</p>
         ${getEmailFooter(email)}
       </div>`,
-      text: `Welcome to RentAPog!\n\nYour affiliate link is ready to start earning commissions.\n\nBefore you begin, visit: ${whitelistUrl}\n\nThis page explains how to whitelist our emails so you never miss a commission.\n\nAfter whitelisting, you'll see your affiliate link and next steps.\n${getPlainTextFooter(email)}`
+      text: `Welcome to RentAPog!\n\nThanks for signing up as an affiliate.\n\nYour unique affiliate link:\n${affLink}\n\nShare this link to start earning commissions!${getPlainTextFooter(email)}`
     };
   },
   day2: (code, subdomain, email = '') => {
-    const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
+    const username = getUsernameFromEmail(email);
+    const link = `https://packages.rentapog.com/?aff=${username}`;
+    const linkDisplay = `packages.rentapog.com/?aff=${username}`;
     return {
       subject: "3 Ways to Earn This Week",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -83,9 +90,9 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
     };
   },
   day4: (code, subdomain, email = '') => {
-    const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
+    const username = getUsernameFromEmail(email);
+    const link = `https://packages.rentapog.com/?aff=${username}`;
+    const linkDisplay = `packages.rentapog.com/?aff=${username}`;
     return {
       subject: "Members Earning $200+ Per Week",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -101,9 +108,9 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
     };
   },
   day6: (code, subdomain, email = '') => {
-    const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
+    const username = getUsernameFromEmail(email);
+    const link = `https://packages.rentapog.com/?aff=${username}`;
+    const linkDisplay = `packages.rentapog.com/?aff=${username}`;
     return {
       subject: "Your Earnings Dashboard Is Ready",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -119,9 +126,9 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
     };
   },
   day8: (code, subdomain, email = '') => {
-    const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
+    const username = getUsernameFromEmail(email);
+    const link = `https://packages.rentapog.com/?aff=${username}`;
+    const linkDisplay = `packages.rentapog.com/?aff=${username}`;
     return {
       subject: "Don't Leave Money on the Table",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -137,9 +144,9 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
     };
   },
   day10: (code, subdomain, email = '') => {
-    const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
+    const username = getUsernameFromEmail(email);
+    const link = `https://packages.rentapog.com/?aff=${username}`;
+    const linkDisplay = `packages.rentapog.com/?aff=${username}`;
     return {
       subject: "Time to Scale Your Earnings",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -155,9 +162,9 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
     };
   },
   day14: (code, subdomain, email = '') => {
-    const subdomainUrl = subdomain ? formatSubdomainUrl(subdomain) : null;
-    const link = subdomainUrl ? `https://${subdomainUrl}` : `https://packages.rentapog.com/?aff=${code}`;
-    const linkDisplay = subdomainUrl || `packages.rentapog.com/?aff=${code}`;
+    const username = getUsernameFromEmail(email);
+    const link = `https://packages.rentapog.com/?aff=${username}`;
+    const linkDisplay = `packages.rentapog.com/?aff=${username}`;
     return {
       subject: "Level Up Your Earnings",
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
