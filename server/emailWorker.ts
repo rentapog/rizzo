@@ -52,20 +52,20 @@ const emailTemplates: { [key: string]: (affiliateCode: string, subdomain?: strin
     // Use username as affiliate code in the link
     const username = getUsernameFromEmail(email);
     const affLink = `https://packages.rentapog.com/?aff=${username}`;
-    return {
-      subject: "Welcome to RentAPog!",
-      html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #1e40af;">Welcome to RentAPog!</h2>
-        <p>Thanks for signing up as an affiliate.</p>
-        <p style="margin-top: 18px;">Your unique affiliate link:</p>
-        <p style="background: #f0f9ff; padding: 15px; border-radius: 8px; text-align: center;">
-          <a href="${affLink}" style="color: #2563eb; font-size: 18px; font-weight: bold; text-decoration: underline;">${affLink}</a>
-        </p>
-        <p style="margin-top: 18px;">Share this link to start earning commissions!</p>
-        ${getEmailFooter(email)}
-      </div>`,
-      text: `Welcome to RentAPog!\n\nThanks for signing up as an affiliate.\n\nYour unique affiliate link:\n${affLink}\n\nShare this link to start earning commissions!${getPlainTextFooter(email)}`
-    };
+      return {
+        subject: "Welcome to RentAPog!",
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #1e40af;">Welcome to RentAPog!</h2>
+          <p>Thanks for signing up as an affiliate.</p>
+          <p style="margin-top: 18px;">Your unique affiliate link:</p>
+          <p style="background: #f0f9ff; padding: 15px; border-radius: 8px; text-align: center;">
+            <a href="${affLink}" style="color: #2563eb; font-size: 18px; font-weight: bold; text-decoration: underline;">${affLink}</a>
+          </p>
+          <p style="margin-top: 18px;">Share this link to start earning commissions!</p>
+          ${getEmailFooter(email)}
+        </div>`,
+        text: `Welcome to RentAPog!\n\nThanks for signing up as an affiliate.\n\nYour unique affiliate link:\n${affLink}\n\nShare this link to start earning commissions!${getPlainTextFooter(email)}`
+      };
   },
   day2: (code, subdomain, email = '') => {
     const username = getUsernameFromEmail(email);
