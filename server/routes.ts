@@ -1,3 +1,6 @@
+// Subdomain registration endpoint
+import { createSubdomain } from "./cloudflare";
+
 
 import type { Express, Request, Response } from "express";
 import { type Server } from "http";
@@ -40,6 +43,24 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
 }
 
 export async function registerRoutes(
+    app.post("/api/subdomain/register", async (req, res) => {
+      try {
+        const { subdomain, affiliateCode } = req.body;
+        if (!subdomain || !affiliateCode) {
+          return res.status(400).json({ success: false, error: "Missing subdomain or affiliateCode" });
+        }
+        // Create subdomain and forward to affiliate link
+        const forwardUrl = `https://packages.rentapog.com/?aff=${affiliateCode}`;
+        const result = await createSubdomain(subdomain, forwardUrl);
+        if (!result.success) {
+          return res.status(500).json({ success: false, error: result.error });
+        }
+        // Optionally: store subdomain for user in DB (not implemented here)
+        return res.json({ success: true, subdomain: result.subdomain, forwardUrl });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: String(err) });
+      }
+    });
   httpServer: Server,
   app: Express
 ): Promise<Server> {
