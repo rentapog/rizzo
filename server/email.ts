@@ -1,7 +1,8 @@
 import { Resend } from "resend";
 import axios from "axios";
-// Resend email sending utility
-export async function sendAffiliateEmailMailgun({
+
+// Resend email sending utility (renamed, no Mailgun)
+export async function sendAffiliateEmailResend({
   toEmail,
   affiliateCode = "rentapog",
   subject = "Your Unique Affiliate Link Inside 🚀",
@@ -19,7 +20,7 @@ export async function sendAffiliateEmailMailgun({
   const defaultText = `Welcome to RentAPog!\nYour affiliate link: https://packages.rentapog.com/?aff=${affiliateCode}`;
   try {
     const data = await resend.emails.send({
-      from: process.env.RESEND_FROM || "RentAPog <sales@rentapog.com>",
+      from: "RentAPog <support@rentapog.com>",
       to: toEmail,
       subject,
       text: text || defaultText,
@@ -78,22 +79,12 @@ const emailTemplates = {
       `,
     }),
   day0: (affiliateCode: string) => ({
-    subject: "Your Unique Affiliate Link Inside 🚀",
+    subject: "Your New Affiliate Link (Test)",
     html: `
-      <h2>Welcome to RentAPog!</h2>
-      <p>Your affiliate link is ready to start earning commissions:</p>
+      <h2>Welcome to RentAPog (New Template)!</h2>
+      <p>This is a new test template to confirm link updates.</p>
       <p><strong><a href="https://packages.rentapog.com/?aff=${affiliateCode}">https://packages.rentapog.com/?aff=${affiliateCode}</a></strong></p>
-      <p>Anyone who signs up through this link becomes your referral. You'll get 100% of their 1st and 3rd+ sales!</p>
-      <hr style="margin:32px 0;"/>
-      <h3 style="color:#2563eb;">How to Whitelist <span style="color:#2563eb;">support@rentapog.com</span>:</h3>
-      <ul style="margin-bottom:16px;">
-        <li><b>Gmail:</b> Open our email, click the three dots, select "Add to Contacts list". If in Spam, click "Not spam" first.</li>
-        <li><b>Outlook/Hotmail:</b> Open our email, right-click and select "Not Junk". Add to Safe Senders in settings if needed.</li>
-        <li><b>Yahoo:</b> Mark as "Not Spam" and add us to contacts.</li>
-        <li><b>Apple Mail:</b> Tap sender, then "Add to VIP" or "Add to Contacts".</li>
-        <li><b>Any provider:</b> Add support@rentapog.com to your address book and mark our emails as "Not Spam".</li>
-      </ul>
-      <p style="color:#64748b;font-size:13px;text-align:center;">Whitelisting our email ensures you never miss important updates from us!</p>
+      <p>Share this link to earn commissions!</p>
     `,
   }),
   day2: (affiliateCode: string) => ({

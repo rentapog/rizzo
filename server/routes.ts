@@ -202,13 +202,14 @@ export async function registerRoutes(
         referredBy: referredBy || null,
         affiliateLink: referredBy || "admin",
       });
-      // Send welcome email
+      // Send welcome email with affiliate link
       const branding = getSiteBranding();
+      const affiliateUrl = `https://packages.rentapog.com/?aff=${user.referralCode}`;
       await sendEmail({
         to: email,
         subject: `Welcome to ${branding.name}`,
-        html: `<h2>Welcome to ${branding.name}!</h2><p>Your account has been created.</p>`,
-        text: `Welcome to ${branding.name}! Your account has been created.`,
+        html: `<h2>Welcome to ${branding.name}!</h2><p>Your account has been created.</p><p>Your affiliate link: <a href="${affiliateUrl}">${affiliateUrl}</a></p>`,
+        text: `Welcome to ${branding.name}! Your account has been created.\nYour affiliate link: ${affiliateUrl}`,
       });
       res.json({ success: true, user: { id: user.id, email: user.email, referralCode: user.referralCode } });
     } catch (err) {
@@ -230,13 +231,14 @@ export async function registerRoutes(
         assignedAffiliate: affiliateLink || "admin",
         verified: false,
       });
-      // Send welcome email
+      // Send welcome email with affiliate link
       const branding = getSiteBranding();
+      const affiliateUrl = `https://packages.rentapog.com/?aff=${affiliateLink || 'admin'}`;
       await sendEmail({
         to: email,
         subject: `Welcome to ${branding.name}`,
-        html: `<h2>Welcome to ${branding.name}!</h2><p>Thanks for signing up as an affiliate.</p>`,
-        text: `Welcome to ${branding.name}! Thanks for signing up as an affiliate.`,
+        html: `<h2>Welcome to ${branding.name}!</h2><p>Thanks for signing up as an affiliate.</p><p>Your affiliate link: <a href="${affiliateUrl}">${affiliateUrl}</a></p>`,
+        text: `Welcome to ${branding.name}! Thanks for signing up as an affiliate.\nYour affiliate link: ${affiliateUrl}`,
       });
       res.json({ success: true, lead: { id: lead.id, email: lead.email } });
     } catch (err) {

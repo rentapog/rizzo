@@ -8,7 +8,7 @@ async function main() {
   try {
     const data = await resend.emails.send({
       from: process.env.RESEND_FROM,
-      to: 'grant rizzoli <support@rentapog.com>',
+      to: 'Grant Rizzoli <support@rentapog.com>',
       subject: 'Hello from Resend',
       text: 'Congratulations grant rizzoli, you just sent an email with Resend! You are truly awesome!',
     });
