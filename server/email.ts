@@ -20,7 +20,7 @@ export async function sendAffiliateEmailResend({
   const defaultText = `Welcome to RentAPog!\nYour affiliate link: https://packages.rentapog.com/?aff=${affiliateCode}`;
   try {
     const data = await resend.emails.send({
-      from: "RentAPog <support@rentapog.com>",
+      from: `RentAPog <${process.env.RESEND_FROM}>`,
       to: toEmail,
       subject,
       text: text || defaultText,

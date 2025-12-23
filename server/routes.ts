@@ -42,66 +42,66 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
   }
 }
 
-export async function registerRoutes(
-    app.post("/api/subdomain/register", async (req, res) => {
-      try {
-        const { subdomain, affiliateCode } = req.body;
-        if (!subdomain || !affiliateCode) {
-          return res.status(400).json({ success: false, error: "Missing subdomain or affiliateCode" });
-        }
-        // Create subdomain and forward to affiliate link
-        const forwardUrl = `https://packages.rentapog.com/?aff=${affiliateCode}`;
-        const result = await createSubdomain(subdomain, forwardUrl);
-        if (!result.success) {
-          return res.status(500).json({ success: false, error: result.error });
-        }
-        // Optionally: store subdomain for user in DB (not implemented here)
-        return res.json({ success: true, subdomain: result.subdomain, forwardUrl });
-      } catch (err) {
-        return res.status(500).json({ success: false, error: String(err) });
+export async function registerRoutes(app: Express, httpServer: Server): Promise<Server> {
+  // --- SUBDOMAIN REGISTRATION ENDPOINT ---
+  app.post("/api/subdomain/register", async (req, res) => {
+    try {
+      const { subdomain, affiliateCode } = req.body;
+      if (!subdomain || !affiliateCode) {
+        return res.status(400).json({ success: false, error: "Missing subdomain or affiliateCode" });
       }
-    });
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
+      // Create subdomain and forward to affiliate link
+      const forwardUrl = `https://packages.rentapog.com/?aff=${affiliateCode}`;
+      const result = await createSubdomain(subdomain, forwardUrl);
+      if (!result.success) {
+        return res.status(500).json({ success: false, error: result.error });
+      }
+      // Optionally: store subdomain for user in DB (not implemented here)
+      return res.json({ success: true, subdomain: result.subdomain, forwardUrl });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: String(err) });
+    }
+  });
   // --- SQUARE PAYMENT ENDPOINT ---
   app.post("/api/payments/square/create-checkout", async (req, res) => {
     try {
-      const { Client, Environment } = await import('square');
+      const { SquareClient, SquareEnvironment } = await import('square');
       const { price, email, packageTitle } = req.body;
       const allowedPrices = [20,49,99,149,199,249,299,349,399,449,499];
       if (!allowedPrices.includes(Number(price))) {
         return res.status(400).json({ error: "Invalid package price" });
       }
-      const squareClient = new Client({
-        accessToken: process.env.SQUARE_ACCESS_TOKEN,
-        environment: Environment.Sandbox,
+      const squareClient = new SquareClient({
+        token: process.env.SQUARE_ACCESS_TOKEN,
+        environment: SquareEnvironment.Sandbox,
       });
-      const { result: orderResult } = await squareClient.ordersApi.createOrder({
-        order: {
-          locationId: process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A",
-          lineItems: [
-            {
-              name: packageTitle || `RentAPog Package $${price}`,
-              quantity: "1",
-              basePriceMoney: {
-                amount: Number(price) * 100,
-                currency: "AUD"
-              }
+      // Create order and checkout using checkoutApi
+      const orderObj = {
+        locationId: process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A",
+        lineItems: [
+          {
+            name: packageTitle || `RentAPog Package $${price}`,
+            quantity: "1",
+            basePriceMoney: {
+              amount: BigInt(Number(price) * 100),
+              currency: "AUD" as any
             }
-          ]
-        }
-      });
-      const { result: checkoutResult } = await squareClient.checkoutApi.createCheckout(
-        process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A",
-        {
-          order: { id: orderResult.order?.id },
-          askForShippingAddress: false,
-          merchantSupportEmail: process.env.SITE_EMAIL || "sales@rentapog.com",
-          prePopulateBuyerEmail: email,
-          redirectUrl: "https://packages.rentapog.com/payment-success"
-        }
-      );
+          }
+        ]
+      };
+      const orderResult = await squareClient.orders.create({ order: orderObj });
+      if (!orderResult.order) {
+        return res.status(500).json({ error: "Failed to create order for checkout" });
+      }
+      const checkoutResult = await squareClient.locations.checkouts({
+        idempotencyKey: `${Date.now()}-${Math.random()}`,
+        order: orderObj,
+        askForShippingAddress: false,
+        merchantSupportEmail: process.env.SITE_EMAIL || "sales@rentapog.com",
+        prePopulateBuyerEmail: email,
+        redirectUrl: "https://packages.rentapog.com/payment-success",
+        locationId: process.env.SQUARE_LOCATION_ID || "L88917K1V6Y6A"
+      } as any);
       res.json({ url: checkoutResult.checkout?.checkoutPageUrl });
     } catch (error) {
       console.error("[Square] Error creating checkout:", error);
@@ -117,8 +117,8 @@ export async function registerRoutes(
       const branding = getSiteBranding();
       const affCode = affiliateCode || "rentapog";
       const defaultSubject = subject || `Welcome to ${branding.name}`;
-      const defaultHtml = html || `<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #1e40af;\">Welcome!</h2><p>Thank you for joining ${branding.name}. Your affiliate code is <b>${affCode}</b>.</p></div>`;
-      const defaultText = text || `Welcome! Thank you for joining ${branding.name}. Your affiliate code is ${affCode}.`;
+      const defaultHtml = html || `<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #1e40af;\">Welcome!</h2><p>Thank you for joining ${branding.name}. Your affiliate link is <b><a href='https://packages.rentapog.com/?aff=${affCode}'>https://packages.rentapog.com/?aff=${affCode}</a></b></p></div>`;
+      const defaultText = text || `Welcome! Thank you for joining ${branding.name}. Your affiliate link: https://packages.rentapog.com/?aff=${affCode}`;
       const result = await sendEmail({
         to: toEmail,
         subject: defaultSubject,
@@ -144,11 +144,11 @@ export async function registerRoutes(
       // Example: Use Anthropic Claude API (replace with your actual logic)
       const { default: Anthropic } = await import("@anthropic-ai/sdk");
       const anthropic = new Anthropic({ apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY });
-      const completion = await anthropic.completions.create({
-        model: "claude-3-opus-20240229",
-        max_tokens: 512,
-        prompt,
-      });
+        const completion = await anthropic.completions.create({
+          model: "claude-3-opus-20240229",
+          max_tokens_to_sample: 512,
+          prompt,
+        });
       res.json({ success: true, completion });
     } catch (error: any) {
       res.status(500).json({ error: error?.message || "Anthropic error" });
